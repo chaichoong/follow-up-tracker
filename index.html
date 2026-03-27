@@ -177,6 +177,19 @@
         .drafting-status { text-align: center; padding: 40px 20px; color: #64748b; }
         .settings-info { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 
+        /* Attachments */
+        .attachment-list { margin-top: 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .attachment-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .attachment-item {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; margin: 3px 4px 3px 0;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;
+            color: #475569; text-decoration: none; cursor: pointer; transition: all 0.15s;
+        }
+        .attachment-item:hover { background: #eef2ff; border-color: #6366f1; color: #6366f1; }
+        .attachment-icon { font-size: 14px; }
+        .attachment-name { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .attachment-size { color: #94a3b8; font-size: 11px; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .email-list-header { display: none; }
@@ -495,14 +508,20 @@
                 const lastDate = new Date(parseInt(lastMsg.internalDate));
                 const firstDate = new Date(parseInt(firstMsg.internalDate));
 
-                const threadMessages = messages.map(msg => ({
-                    from: getHeader(msg, 'From'),
-                    to: getHeader(msg, 'To'),
-                    date: new Date(parseInt(msg.internalDate)),
-                    body: extractBody(msg.payload).text,
-                    isHtml: extractBody(msg.payload).isHtml,
-                    snippet: msg.snippet
-                }));
+                const threadMessages = messages.map(msg => {
+                    const extracted = extractBody(msg.payload);
+                    return {
+                        id: msg.id,
+                        from: getHeader(msg, 'From'),
+                        to: getHeader(msg, 'To'),
+                        date: new Date(parseInt(msg.internalDate)),
+                        body: extracted.text,
+                        isHtml: extracted.isHtml,
+                        attachments: extracted.attachments,
+                        inlineImages: extracted.inlineImages,
+                        snippet: msg.snippet
+                    };
+                });
 
                 const now = new Date();
                 const daysOld = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
@@ -601,15 +620,47 @@
     function extractBody(payload) {
         let html = '';
         let plain = '';
+        const attachments = [];
+        const inlineImages = {}; // contentId -> { attachmentId, mimeType }
+
         function walk(part) {
-            if (part.mimeType === 'text/html' && part.body?.data) html = decodeBase64(part.body.data);
-            else if (part.mimeType === 'text/plain' && part.body?.data) plain = decodeBase64(part.body.data);
+            if (part.mimeType === 'text/html' && part.body?.data) {
+                html = decodeBase64(part.body.data);
+            } else if (part.mimeType === 'text/plain' && part.body?.data) {
+                plain = decodeBase64(part.body.data);
+            }
+
+            // Check for attachments and inline images
+            const filename = part.filename;
+            const attachmentId = part.body?.attachmentId;
+            const contentId = (part.headers || []).find(h => h.name.toLowerCase() === 'content-id');
+            const disposition = (part.headers || []).find(h => h.name.toLowerCase() === 'content-disposition');
+
+            if (attachmentId && contentId && part.mimeType?.startsWith('image/')) {
+                // Inline image (used in HTML via cid:)
+                const cid = contentId.value.replace(/[<>]/g, '');
+                inlineImages[cid] = { attachmentId, mimeType: part.mimeType };
+            }
+
+            if (filename && attachmentId) {
+                attachments.push({
+                    filename,
+                    mimeType: part.mimeType,
+                    size: part.body?.size || 0,
+                    attachmentId
+                });
+            }
+
             if (part.parts) part.parts.forEach(walk);
         }
+
         walk(payload);
-        if (html) return { text: html, isHtml: true };
-        if (plain) return { text: plain, isHtml: false };
-        return { text: '(No content)', isHtml: false };
+
+        const result = { attachments, inlineImages };
+        if (html) { result.text = html; result.isHtml = true; }
+        else if (plain) { result.text = plain; result.isHtml = false; }
+        else { result.text = '(No content)'; result.isHtml = false; }
+        return result;
     }
 
     function decodeBase64(data) {
@@ -670,7 +721,7 @@
 
         container.innerHTML = emails.map((email, i) => `
             <div class="email-row" id="row-${i}">
-                <div class="email-row-summary" onclick="toggleRow(${i})">
+                <div class="email-row-summary" onclick="toggleRow(${i}); return false;">
                     <div class="row-number">${i + 1}</div>
                     <div class="email-subject-col">
                         <div class="email-subject">${escapeHtml(email.subject)}</div>
@@ -703,24 +754,47 @@
     }
 
     function renderSingleMessage(msg) {
-        if (msg.isHtml) return `<div class="email-content-html">${sanitizeHtml(msg.body)}</div>`;
-        return `<div class="email-content">${escapeHtml(msg.body)}</div>`;
+        const contentId = 'msg-content-' + msg.id;
+        const content = msg.isHtml
+            ? `<div class="email-content-html" id="${contentId}">${sanitizeHtml(msg.body)}</div>`
+            : `<div class="email-content">${escapeHtml(msg.body)}</div>`;
+        return content + renderAttachments(msg.id, msg.attachments);
     }
 
     function renderThread(messages) {
-        return `<div class="thread-messages">${messages.map(msg => `
+        return `<div class="thread-messages">${messages.map(msg => {
+            const contentId = 'msg-content-' + msg.id;
+            return `
             <div class="thread-msg">
                 <div class="thread-msg-header">
                     <strong>${escapeHtml(msg.from)}</strong>
                     <span>${formatDate(msg.date)}</span>
                 </div>
-                <div class="thread-msg-body">${msg.isHtml ? sanitizeHtml(msg.body) : escapeHtml(msg.body)}</div>
-            </div>
-        `).join('')}</div>`;
+                <div class="thread-msg-body" id="${contentId}">${msg.isHtml ? sanitizeHtml(msg.body) : escapeHtml(msg.body)}</div>
+                ${renderAttachments(msg.id, msg.attachments)}
+            </div>`;
+        }).join('')}</div>`;
     }
 
-    function toggleRow(index) {
-        document.getElementById('row-' + index).classList.toggle('expanded');
+    async function toggleRow(index) {
+        const row = document.getElementById('row-' + index);
+        const wasExpanded = row.classList.contains('expanded');
+        row.classList.toggle('expanded');
+
+        // On first expand, resolve inline images
+        if (!wasExpanded && !row.dataset.imagesResolved) {
+            row.dataset.imagesResolved = 'true';
+            const email = allEmails[index];
+            for (const msg of email.messages) {
+                if (msg.isHtml && msg.inlineImages && Object.keys(msg.inlineImages).length > 0) {
+                    const el = document.getElementById('msg-content-' + msg.id);
+                    if (el) {
+                        const resolved = await resolveInlineImages(msg.id, el.innerHTML, msg.inlineImages);
+                        el.innerHTML = resolved;
+                    }
+                }
+            }
+        }
     }
 
     function updateStats(emails) {
@@ -742,6 +816,78 @@
             .replace(/\son\w+="[^"]*"/gi, '')
             .replace(/\son\w+='[^']*'/gi, '')
             .replace(/javascript:/gi, '');
+    }
+
+    // ============================================================
+    // ATTACHMENTS & INLINE IMAGES
+    // ============================================================
+    async function fetchAttachmentData(msgId, attachmentId) {
+        const resp = await gapi.client.gmail.users.messages.attachments.get({
+            userId: 'me', messageId: msgId, id: attachmentId
+        });
+        return resp.result.data; // base64url encoded
+    }
+
+    async function resolveInlineImages(msgId, htmlContent, inlineImages) {
+        let resolved = htmlContent;
+        const cids = Object.keys(inlineImages);
+        if (cids.length === 0) return resolved;
+
+        const promises = cids.map(async cid => {
+            try {
+                const data = await fetchAttachmentData(msgId, inlineImages[cid].attachmentId);
+                const b64 = data.replace(/-/g, '+').replace(/_/g, '/');
+                const dataUri = `data:${inlineImages[cid].mimeType};base64,${b64}`;
+                return { cid, dataUri };
+            } catch { return { cid, dataUri: '' }; }
+        });
+
+        const results = await Promise.all(promises);
+        for (const { cid, dataUri } of results) {
+            if (dataUri) {
+                resolved = resolved.replace(new RegExp(`cid:${cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), dataUri);
+            }
+        }
+        return resolved;
+    }
+
+    async function downloadAttachment(msgId, attachmentId, filename, mimeType) {
+        try {
+            const data = await fetchAttachmentData(msgId, attachmentId);
+            const b64 = data.replace(/-/g, '+').replace(/_/g, '/');
+            const byteChars = atob(b64);
+            const byteArr = new Uint8Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+            const blob = new Blob([byteArr], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            showError('Failed to download attachment: ' + err.message);
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function renderAttachments(msgId, attachments) {
+        if (!attachments || attachments.length === 0) return '';
+        return `<div class="attachment-list">
+            <div class="attachment-label">Attachments:</div>
+            ${attachments.map(a => `
+                <a class="attachment-item" href="#" onclick="event.preventDefault(); downloadAttachment('${msgId}', '${a.attachmentId}', '${escapeHtml(a.filename)}', '${a.mimeType}')">
+                    <span class="attachment-icon">&#128206;</span>
+                    <span class="attachment-name">${escapeHtml(a.filename)}</span>
+                    <span class="attachment-size">${formatFileSize(a.size)}</span>
+                </a>
+            `).join('')}
+        </div>`;
     }
 
     function showError(msg) { document.getElementById('errorContainer').innerHTML = `<div class="error-msg">${escapeHtml(msg)}</div>`; }
