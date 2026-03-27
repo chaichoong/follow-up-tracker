@@ -25,125 +25,48 @@
             top: 0;
             z-index: 100;
         }
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0f172a;
-            flex-shrink: 0;
-        }
+        .header h1 { font-size: 20px; font-weight: 600; color: #0f172a; flex-shrink: 0; }
         .header h1 span { color: #6366f1; }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-        .badge {
-            background: #6366f1;
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 12px;
-        }
+        .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .badge { background: #6366f1; color: white; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; }
         .refresh-btn, .signout-btn, .settings-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #475569;
-            transition: all 0.15s;
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; transition: all 0.15s;
         }
         .settings-btn { padding: 8px 10px; }
-        .refresh-btn:hover, .signout-btn:hover, .settings-btn:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-        }
-        .refresh-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .refresh-btn:hover, .signout-btn:hover, .settings-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .label-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #475569;
-            cursor: pointer;
-            width: 200px;
-            appearance: none;
+            padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            border: 1px solid #e2e8f0; background: #ffffff; color: #475569; cursor: pointer;
+            width: 200px; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
+            background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
         }
         .label-select:focus { outline: none; border-color: #6366f1; }
 
         /* Auth Screen */
-        .auth-screen {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            flex-direction: column;
-            padding: 20px;
-        }
+        .auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; padding: 20px; }
         .auth-box {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 48px 40px;
-            max-width: 460px;
-            width: 100%;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-            text-align: center;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 48px 40px;
+            max-width: 460px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.06); text-align: center;
         }
         .auth-box h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
         .auth-box p { font-size: 14px; color: #64748b; margin-bottom: 28px; line-height: 1.5; }
         .google-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 28px;
-            background: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.15s;
+            display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px;
+            background: #4285f4; color: white; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s;
         }
         .google-btn:hover { background: #3367d6; }
         .google-btn svg { width: 20px; height: 20px; }
 
         /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
         /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .stat-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px 20px;
-            flex: 1;
-            min-width: 140px;
-        }
+        .stats-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; flex: 1; min-width: 140px; }
         .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
         .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
         .stat-card .value.red { color: #ef4444; }
@@ -152,337 +75,113 @@
         .stat-card .value.blue { color: #6366f1; }
 
         /* Email List */
-        .email-list {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-        }
+        .email-list { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .email-list-header {
-            display: grid;
-            grid-template-columns: 40px 1fr 160px 80px 100px 40px;
-            padding: 12px 20px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: grid; grid-template-columns: 40px 1fr 160px 80px 100px 120px 40px;
+            padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .email-row {
-            border-bottom: 1px solid #f1f5f9;
-            transition: background 0.1s;
-        }
+        .email-row { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
         .email-row:last-child { border-bottom: none; }
         .email-row-summary {
-            display: grid;
-            grid-template-columns: 40px 1fr 160px 80px 100px 40px;
-            padding: 14px 20px;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
+            display: grid; grid-template-columns: 40px 1fr 160px 80px 100px 120px 40px;
+            padding: 14px 20px; align-items: center; cursor: pointer; user-select: none;
         }
         .email-row-summary:hover { background: #f8fafc; }
         .email-row.expanded .email-row-summary { background: #f1f5f9; }
-        .row-number {
-            font-size: 12px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-        .email-subject-col {
-            min-width: 0;
-        }
-        .email-subject {
-            font-size: 14px;
-            font-weight: 500;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .email-from {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .email-date {
-            font-size: 13px;
-            color: #475569;
-        }
-        .days-old {
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-        }
+        .row-number { font-size: 12px; color: #94a3b8; font-weight: 500; }
+        .email-subject-col { min-width: 0; }
+        .email-subject { font-size: 14px; font-weight: 500; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-from { font-size: 12px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-date { font-size: 13px; color: #475569; }
+        .days-old { font-size: 13px; font-weight: 600; text-align: center; }
         .days-old.critical { color: #ef4444; }
         .days-old.warning { color: #f59e0b; }
         .days-old.ok { color: #22c55e; }
         .action-col { text-align: center; }
         .followup-btn {
-            padding: 5px 10px;
-            font-size: 11px;
-            font-weight: 600;
-            border: 1px solid #6366f1;
-            background: #eef2ff;
-            color: #6366f1;
-            border-radius: 6px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.15s;
+            padding: 5px 10px; font-size: 11px; font-weight: 600;
+            border: 1px solid #6366f1; background: #eef2ff; color: #6366f1;
+            border-radius: 6px; cursor: pointer; white-space: nowrap; transition: all 0.15s;
         }
         .followup-btn:hover { background: #6366f1; color: white; }
         .followup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .expand-icon {
-            text-align: center;
-            font-size: 16px;
-            color: #94a3b8;
-            transition: transform 0.2s;
+        .label-change-col { text-align: center; }
+        .label-change-select {
+            padding: 4px 6px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px;
+            background: #ffffff; color: #475569; cursor: pointer; max-width: 110px;
         }
+        .label-change-select:focus { outline: none; border-color: #6366f1; }
+        .expand-icon { text-align: center; font-size: 16px; color: #94a3b8; transition: transform 0.2s; }
         .email-row.expanded .expand-icon { transform: rotate(180deg); }
 
         /* Expanded Email Body */
-        .email-body {
-            display: none;
-            padding: 0 20px 20px 60px;
-            animation: fadeIn 0.2s ease;
-        }
+        .email-body { display: none; padding: 0 20px 20px 60px; animation: fadeIn 0.2s ease; }
         .email-row.expanded .email-body { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         .email-meta {
-            display: flex;
-            gap: 24px;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            color: #64748b;
-            flex-wrap: wrap;
+            display: flex; gap: 24px; padding: 12px 16px; background: #f8fafc; border-radius: 8px;
+            margin-bottom: 12px; font-size: 12px; color: #64748b; flex-wrap: wrap;
         }
         .email-meta strong { color: #475569; font-weight: 600; }
         .email-content {
-            font-size: 14px;
-            line-height: 1.7;
-            color: #334155;
-            padding: 16px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            font-size: 14px; line-height: 1.7; color: #334155; padding: 16px; background: #ffffff;
+            border: 1px solid #e2e8f0; border-radius: 8px; max-height: 400px; overflow-y: auto;
+            white-space: pre-wrap; word-wrap: break-word;
         }
         .email-content-html {
-            font-size: 14px;
-            line-height: 1.7;
-            color: #334155;
-            padding: 16px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
+            font-size: 14px; line-height: 1.7; color: #334155; padding: 16px; background: #ffffff;
+            border: 1px solid #e2e8f0; border-radius: 8px; max-height: 400px; overflow-y: auto;
         }
         .email-content-html img { max-width: 100%; height: auto; }
 
         /* Thread messages */
         .thread-messages { margin-top: 12px; }
-        .thread-msg {
-            padding: 12px 16px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-        .thread-msg-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 8px;
-        }
+        .thread-msg { padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; }
+        .thread-msg-header { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 8px; }
         .thread-msg-header strong { color: #475569; }
-        .thread-msg-body {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #334155;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 300px;
-            overflow-y: auto;
-        }
+        .thread-msg-body { font-size: 13px; line-height: 1.6; color: #334155; white-space: pre-wrap; word-wrap: break-word; max-height: 300px; overflow-y: auto; }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #64748b;
-        }
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #6366f1;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
+        /* Loading / Empty / Messages */
+        .loading { text-align: center; padding: 60px 20px; color: #64748b; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .error-msg { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .success-msg { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+        .last-updated { font-size: 12px; color: #94a3b8; text-align: right; margin-top: 12px; }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #94a3b8;
-        }
-
-        /* Error */
-        .error-msg {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
-        .success-msg {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
-
-        /* Last updated */
-        .last-updated {
-            font-size: 12px;
-            color: #94a3b8;
-            text-align: right;
-            margin-top: 12px;
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
-        .modal {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 640px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        }
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal { background: #ffffff; border-radius: 16px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h3 { font-size: 16px; font-weight: 600; }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
+        .modal-close { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px 8px; }
         .modal-close:hover { color: #475569; }
         .modal-body { padding: 24px; }
         .modal-field { margin-bottom: 16px; }
-        .modal-field label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
+        .modal-field label { display: block; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .modal-field input, .modal-field textarea, .modal-field select {
+            width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px;
+            font-size: 14px; font-family: inherit; color: #1e293b; outline: none;
         }
-        .modal-field input, .modal-field textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            color: #1e293b;
-            outline: none;
-        }
-        .modal-field input:focus, .modal-field textarea:focus { border-color: #6366f1; }
+        .modal-field input:focus, .modal-field textarea:focus, .modal-field select:focus { border-color: #6366f1; }
         .modal-field textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
-        .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .btn-cancel {
-            padding: 10px 20px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
-            color: #475569;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { padding: 10px 20px; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
         .btn-cancel:hover { background: #f1f5f9; }
-        .btn-send {
-            padding: 10px 24px;
-            border: none;
-            background: #6366f1;
-            color: white;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
+        .btn-send { padding: 10px 24px; border: none; background: #6366f1; color: white; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
         .btn-send:hover { background: #4f46e5; }
         .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
-        .drafting-status {
-            text-align: center;
-            padding: 40px 20px;
-            color: #64748b;
-        }
-
-        /* Settings Modal */
-        .settings-info {
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 4px;
-        }
+        .drafting-status { text-align: center; padding: 40px 20px; color: #64748b; }
+        .settings-info { font-size: 12px; color: #94a3b8; margin-top: 4px; }
 
         /* Responsive */
         @media (max-width: 768px) {
             .email-list-header { display: none; }
-            .email-row-summary {
-                grid-template-columns: 30px 1fr 60px 50px;
-                gap: 4px;
-            }
-            .email-date { display: none; }
-            .action-col { display: none; }
+            .email-row-summary { grid-template-columns: 30px 1fr 60px 50px; gap: 4px; }
+            .email-date, .action-col, .label-change-col { display: none; }
             .days-old { font-size: 12px; }
             .email-body { padding: 0 12px 16px 12px; }
             .stats-bar { gap: 8px; }
@@ -540,13 +239,11 @@
                 <div>Last Activity</div>
                 <div>Days Old</div>
                 <div>Action</div>
+                <div>Move Label</div>
                 <div></div>
             </div>
             <div id="emailListBody">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div>Loading emails...</div>
-                </div>
+                <div class="loading"><div class="spinner"></div><div>Loading emails...</div></div>
             </div>
         </div>
 
@@ -567,6 +264,10 @@
                 <div>Claude is drafting your follow-up...</div>
             </div>
             <div id="draftForm" style="display:none;">
+                <div class="modal-field">
+                    <label>From</label>
+                    <select id="draftFrom"></select>
+                </div>
                 <div class="modal-field">
                     <label>To</label>
                     <input type="text" id="draftTo" readonly />
@@ -618,15 +319,19 @@
     // ============================================================
     const CLIENT_ID = '194836632219-qs3huadlat6f3vq17e68el61gvspce99.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyARLbCY5crLqM7wHbU2etW5WZP-WrjKNdA';
-    const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+    const SCOPES = 'https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.settings.basic';
     const DEFAULT_LABEL = '2: to follow-up';
+    const CLAUDE_PROXY = 'https://claude-proxy.kevinbrittain.workers.dev';
 
     let tokenClient;
     let accessToken = null;
     let allEmails = [];
     let currentLabel = DEFAULT_LABEL;
-    let allLabels = [];
+    let allLabels = [];         // filtered 1-7 labels
+    let allLabelsRaw = [];      // all labels from Gmail (for ID lookups)
+    let sendAsAliases = [];     // send-as email addresses
     let currentDraftEmail = null;
+    let currentDraftIndex = null;
 
     // ============================================================
     // AUTH
@@ -659,7 +364,7 @@
     }
 
     function handleAuth() {
-        if (!tokenClient) { showError('Google sign-in is still loading. Please wait a moment and try again.'); return; }
+        if (!tokenClient) { showError('Google sign-in is still loading. Please wait.'); return; }
         tokenClient.requestAccessToken({ prompt: 'consent' });
     }
 
@@ -675,13 +380,14 @@
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         fetchLabels();
+        fetchSendAsAliases();
     }
 
     async function fetchLabels() {
         try {
             const labelsResp = await gapi.client.gmail.users.labels.list({ userId: 'me' });
-            // Only show numbered labels 1-7
-            allLabels = (labelsResp.result.labels || [])
+            allLabelsRaw = labelsResp.result.labels || [];
+            allLabels = allLabelsRaw
                 .filter(l => l.type === 'user' && /^[1-7][.:]\s/.test(l.name))
                 .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -694,9 +400,17 @@
         }
     }
 
+    async function fetchSendAsAliases() {
+        try {
+            const resp = await gapi.client.gmail.users.settings.sendAs.list({ userId: 'me' });
+            sendAsAliases = (resp.result.sendAs || []).filter(a => a.verificationStatus === 'accepted' || a.isPrimary);
+        } catch (err) {
+            console.error('Failed to fetch send-as aliases:', err);
+        }
+    }
+
     function onLabelChange() {
-        const select = document.getElementById('labelSelect');
-        currentLabel = select.value;
+        currentLabel = document.getElementById('labelSelect').value;
         loadEmails();
     }
 
@@ -704,20 +418,14 @@
     // SETTINGS
     // ============================================================
     function openSettings() {
-        document.getElementById('claudeApiKey').value = localStorage.getItem('claude_api_key') || '';
         document.getElementById('senderName').value = localStorage.getItem('sender_name') || '';
         document.getElementById('settingsModal').classList.add('active');
     }
 
-    function closeSettings() {
-        document.getElementById('settingsModal').classList.remove('active');
-    }
+    function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
 
     function saveSettings() {
-        const key = document.getElementById('claudeApiKey').value.trim();
         const name = document.getElementById('senderName').value.trim();
-        if (key) localStorage.setItem('claude_api_key', key);
-        else localStorage.removeItem('claude_api_key');
         if (name) localStorage.setItem('sender_name', name);
         else localStorage.removeItem('sender_name');
         closeSettings();
@@ -734,15 +442,16 @@
         clearError();
 
         try {
-            const labelsResp = await gapi.client.gmail.users.labels.list({ userId: 'me' });
-            const labels = labelsResp.result.labels || [];
-            const targetLabel = labels.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
+            // Refresh labels in case they changed
+            if (allLabelsRaw.length === 0) {
+                const labelsResp = await gapi.client.gmail.users.labels.list({ userId: 'me' });
+                allLabelsRaw = labelsResp.result.labels || [];
+            }
 
+            const targetLabel = allLabelsRaw.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
             if (!targetLabel) {
                 document.getElementById('emailListBody').innerHTML = '<div class="empty-state"><p>No label called "' + escapeHtml(currentLabel) + '" found.</p></div>';
-                btn.disabled = false;
-                btn.textContent = 'Refresh';
-                return;
+                btn.disabled = false; btn.textContent = 'Refresh'; return;
             }
 
             let allMessageIds = [];
@@ -756,11 +465,8 @@
             } while (pageToken);
 
             if (allMessageIds.length === 0) {
-                document.getElementById('emailListBody').innerHTML = '<div class="empty-state"><p>No emails found with the "' + escapeHtml(currentLabel) + '" label.</p></div>';
-                updateStats([]);
-                btn.disabled = false;
-                btn.textContent = 'Refresh';
-                return;
+                document.getElementById('emailListBody').innerHTML = '<div class="empty-state"><p>No emails found with "' + escapeHtml(currentLabel) + '".</p></div>';
+                updateStats([]); btn.disabled = false; btn.textContent = 'Refresh'; return;
             }
 
             const threadIds = [...new Set(allMessageIds.map(m => m.threadId))];
@@ -786,7 +492,6 @@
 
                 const subject = getHeader(firstMsg, 'Subject') || '(No subject)';
                 const from = getHeader(firstMsg, 'From');
-                const lastFrom = getHeader(lastMsg, 'From');
                 const lastDate = new Date(parseInt(lastMsg.internalDate));
                 const firstDate = new Date(parseInt(firstMsg.internalDate));
 
@@ -802,18 +507,19 @@
                 const now = new Date();
                 const daysOld = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
 
-                // Determine reply-to address (the other party, not us)
                 let replyTo = from;
                 for (let m of messages) {
                     const mFrom = getHeader(m, 'From');
-                    if (!mFrom.toLowerCase().includes('kevin')) {
-                        replyTo = mFrom;
-                    }
+                    if (!mFrom.toLowerCase().includes('kevin')) replyTo = mFrom;
                 }
+
+                // Collect all message IDs for label operations
+                const msgIds = messages.map(m => m.id);
 
                 return {
                     threadId: thread.id,
                     messageId: getHeader(lastMsg, 'Message-Id'),
+                    msgIds,
                     subject,
                     from: cleanFrom(from),
                     fromFull: from,
@@ -845,6 +551,48 @@
 
         btn.disabled = false;
         btn.textContent = 'Refresh';
+    }
+
+    // ============================================================
+    // CHANGE LABEL
+    // ============================================================
+    async function changeLabel(emailIndex, newLabelName) {
+        const email = allEmails[emailIndex];
+        if (!email) return;
+
+        // Find current label ID and new label ID
+        const currentLabelObj = allLabelsRaw.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
+        const newLabelObj = allLabelsRaw.find(l => l.name === newLabelName);
+        if (!currentLabelObj || !newLabelObj) { showError('Label not found.'); return; }
+
+        try {
+            // Modify labels on all messages in the thread
+            const promises = email.msgIds.map(msgId =>
+                gapi.client.gmail.users.messages.modify({
+                    userId: 'me',
+                    id: msgId,
+                    resource: {
+                        addLabelIds: [newLabelObj.id],
+                        removeLabelIds: [currentLabelObj.id]
+                    }
+                })
+            );
+            await Promise.all(promises);
+
+            showSuccess('Moved to "' + newLabelName + '"');
+
+            // Remove from current list and re-render
+            allEmails.splice(emailIndex, 1);
+            renderEmails(allEmails);
+            updateStats(allEmails);
+
+        } catch (err) {
+            console.error('Label change error:', err);
+            showError('Failed to change label: ' + (err.result?.error?.message || err.message || 'Unknown error'));
+            // Reset the dropdown
+            const sel = document.getElementById('labelChg-' + emailIndex);
+            if (sel) sel.value = '';
+        }
     }
 
     // ============================================================
@@ -895,7 +643,6 @@
         return 'ok';
     }
 
-    // Get plain text from potentially HTML content
     function getPlainText(msg) {
         if (!msg.isHtml) return msg.body;
         const div = document.createElement('div');
@@ -911,8 +658,15 @@
 
         if (emails.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>No emails found.</p></div>';
+            document.getElementById('emailCount').textContent = '0';
             return;
         }
+
+        // Build label options for the move dropdown (exclude current label)
+        const labelOptions = allLabels
+            .filter(l => l.name.toLowerCase() !== currentLabel.toLowerCase())
+            .map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`)
+            .join('');
 
         container.innerHTML = emails.map((email, i) => `
             <div class="email-row" id="row-${i}">
@@ -923,8 +677,14 @@
                         <div class="email-from">${escapeHtml(email.from)}${email.messageCount > 1 ? ' &middot; ' + email.messageCount + ' messages' : ''}</div>
                     </div>
                     <div class="email-date">${formatDate(email.lastDate)}</div>
-                    <div class="days-old ${getDaysClass(email.daysOld)}">${email.daysOld}d</div>
+                    <div class="days-old ${getDaysClass(email.daysOld)}" id="days-${i}">${email.daysOld}d</div>
                     <div class="action-col"><button class="followup-btn" onclick="event.stopPropagation(); draftFollowUp(${i})">Follow up</button></div>
+                    <div class="label-change-col" onclick="event.stopPropagation();">
+                        <select class="label-change-select" id="labelChg-${i}" onchange="changeLabel(${i}, this.value)">
+                            <option value="">Move to...</option>
+                            ${labelOptions}
+                        </select>
+                    </div>
                     <div class="expand-icon">&#9662;</div>
                 </div>
                 <div class="email-body">
@@ -984,36 +744,35 @@
             .replace(/javascript:/gi, '');
     }
 
-    function showError(msg) {
-        document.getElementById('errorContainer').innerHTML = `<div class="error-msg">${escapeHtml(msg)}</div>`;
-    }
-
-    function showSuccess(msg) {
-        document.getElementById('errorContainer').innerHTML = `<div class="success-msg">${escapeHtml(msg)}</div>`;
-        setTimeout(clearError, 5000);
-    }
-
-    function clearError() {
-        document.getElementById('errorContainer').innerHTML = '';
-    }
+    function showError(msg) { document.getElementById('errorContainer').innerHTML = `<div class="error-msg">${escapeHtml(msg)}</div>`; }
+    function showSuccess(msg) { document.getElementById('errorContainer').innerHTML = `<div class="success-msg">${escapeHtml(msg)}</div>`; setTimeout(clearError, 5000); }
+    function clearError() { document.getElementById('errorContainer').innerHTML = ''; }
 
     // ============================================================
-    // DRAFT FOLLOW UP (Claude AI)
+    // DRAFT FOLLOW UP (Claude AI via Cloudflare Worker)
     // ============================================================
     async function draftFollowUp(index) {
-        const CLAUDE_PROXY = 'https://claude-proxy.kevinbrittain.workers.dev';
-
         const email = allEmails[index];
         currentDraftEmail = email;
+        currentDraftIndex = index;
 
-        // Show modal with loading state
         document.getElementById('draftModal').classList.add('active');
         document.getElementById('draftingStatus').style.display = 'block';
         document.getElementById('draftForm').style.display = 'none';
         document.getElementById('sendBtn').disabled = true;
         document.getElementById('draftModalTitle').textContent = 'Draft Follow Up: ' + email.subject;
 
-        // Get the conversation context (plain text of last few messages)
+        // Populate From dropdown
+        const fromSelect = document.getElementById('draftFrom');
+        if (sendAsAliases.length > 0) {
+            fromSelect.innerHTML = sendAsAliases.map(a => {
+                const display = a.displayName ? `${a.displayName} <${a.sendAsEmail}>` : a.sendAsEmail;
+                return `<option value="${escapeHtml(a.sendAsEmail)}"${a.isPrimary ? ' selected' : ''}>${escapeHtml(display)}</option>`;
+            }).join('');
+        } else {
+            fromSelect.innerHTML = '<option value="">Primary account</option>';
+        }
+
         const lastMessages = email.messages.slice(-3).map(m =>
             `From: ${m.from}\nDate: ${formatDate(m.date)}\n\n${getPlainText(m)}`
         ).join('\n---\n');
@@ -1036,9 +795,7 @@ Draft a brief, friendly follow-up email. Keep it concise (3-5 sentences). Be pro
         try {
             const response = await fetch(CLAUDE_PROXY, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: 'claude-sonnet-4-20250514',
                     max_tokens: 500,
@@ -1054,7 +811,6 @@ Draft a brief, friendly follow-up email. Keep it concise (3-5 sentences). Be pro
             const data = await response.json();
             const draftText = data.content[0].text;
 
-            // Populate the form
             document.getElementById('draftTo').value = recipientEmail;
             document.getElementById('draftSubject').value = (email.subject.startsWith('Re:') ? '' : 'Re: ') + email.subject;
             document.getElementById('draftBody').value = draftText;
@@ -1071,6 +827,7 @@ Draft a brief, friendly follow-up email. Keep it concise (3-5 sentences). Be pro
     function closeDraftModal() {
         document.getElementById('draftModal').classList.remove('active');
         currentDraftEmail = null;
+        currentDraftIndex = null;
     }
 
     // ============================================================
@@ -1081,46 +838,54 @@ Draft a brief, friendly follow-up email. Keep it concise (3-5 sentences). Be pro
         sendBtn.disabled = true;
         sendBtn.textContent = 'Sending...';
 
+        const fromEmail = document.getElementById('draftFrom').value;
         const to = document.getElementById('draftTo').value;
         const subject = document.getElementById('draftSubject').value;
         const body = document.getElementById('draftBody').value;
 
-        // Build RFC 2822 message
         const headers = [
             `To: ${to}`,
             `Subject: ${subject}`,
             `Content-Type: text/plain; charset=utf-8`
         ];
 
-        // Add threading headers if we have them
+        // Add From header if using an alias
+        if (fromEmail) {
+            const alias = sendAsAliases.find(a => a.sendAsEmail === fromEmail);
+            if (alias) {
+                const fromDisplay = alias.displayName ? `${alias.displayName} <${alias.sendAsEmail}>` : alias.sendAsEmail;
+                headers.unshift(`From: ${fromDisplay}`);
+            }
+        }
+
         if (currentDraftEmail?.messageId) {
             headers.push(`In-Reply-To: ${currentDraftEmail.messageId}`);
             headers.push(`References: ${currentDraftEmail.messageId}`);
         }
 
         const rawMessage = headers.join('\r\n') + '\r\n\r\n' + body;
-
-        // Base64url encode
         const encoded = btoa(unescape(encodeURIComponent(rawMessage)))
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
         try {
-            const sendParams = {
-                userId: 'me',
-                resource: { raw: encoded }
-            };
-
-            // Thread the reply if possible
-            if (currentDraftEmail?.threadId) {
-                sendParams.resource.threadId = currentDraftEmail.threadId;
-            }
+            const sendParams = { userId: 'me', resource: { raw: encoded } };
+            if (currentDraftEmail?.threadId) sendParams.resource.threadId = currentDraftEmail.threadId;
 
             await gapi.client.gmail.users.messages.send(sendParams);
 
+            // Update the local data: set days old to 0 and update last date
+            if (currentDraftIndex !== null && allEmails[currentDraftIndex]) {
+                allEmails[currentDraftIndex].daysOld = 0;
+                allEmails[currentDraftIndex].lastDate = new Date();
+                allEmails[currentDraftIndex].messageCount += 1;
+            }
+
             closeDraftModal();
-            showSuccess('Follow-up email sent successfully to ' + to);
+            showSuccess('Follow-up sent from ' + (fromEmail || 'primary account') + ' to ' + to);
+
+            // Re-render to update days old display
+            renderEmails(allEmails);
+            updateStats(allEmails);
 
         } catch (err) {
             console.error('Send error:', err);
