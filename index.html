@@ -342,6 +342,10 @@
             </div>
             <div id="draftForm" style="display:none;">
                 <div class="modal-field">
+                    <label>Original Message</label>
+                    <div id="draftOriginal" style="font-size:13px; line-height:1.6; color:#475569; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; max-height:200px; overflow-y:auto; white-space:pre-wrap; word-wrap:break-word;"></div>
+                </div>
+                <div class="modal-field">
                     <label>From</label>
                     <select id="draftFrom"></select>
                 </div>
@@ -354,7 +358,7 @@
                     <input type="text" id="draftSubject" />
                 </div>
                 <div class="modal-field">
-                    <label>Message</label>
+                    <label>Your Response</label>
                     <textarea id="draftBody"></textarea>
                 </div>
                 <div class="modal-field" id="feedbackField">
@@ -1655,6 +1659,11 @@ Draft a brief, professional response email. Keep it concise (3-5 sentences). Be 
 
             const data = await response.json();
             const draftText = data.content[0].text;
+
+            // Show the most recent message as context
+            const lastMsg = email.messages[email.messages.length - 1];
+            const originalText = `From: ${lastMsg.from}\nDate: ${formatDate(lastMsg.date)}\n\n${getPlainText(lastMsg)}`;
+            document.getElementById('draftOriginal').textContent = originalText;
 
             document.getElementById('draftTo').value = recipientEmail;
             document.getElementById('draftSubject').value = (email.subject.startsWith('Re:') ? '' : 'Re: ') + email.subject;
