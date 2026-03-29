@@ -372,7 +372,7 @@
                 <div class="modal-field" id="feedbackField">
                     <label>Feedback / Amendments</label>
                     <div style="display:flex; gap:8px; align-items:flex-start;">
-                        <input type="text" id="draftFeedback" placeholder="e.g. Make it more formal, mention the invoice number..." style="flex:1;" />
+                        <textarea id="draftFeedback" placeholder="e.g. Make it more formal, mention the invoice number, add a reference to the previous conversation..." style="flex:1; min-height:80px; resize:vertical; font-family:inherit; font-size:13px; padding:10px; border:1px solid #e2e8f0; border-radius:8px;"></textarea>
                         <button class="btn-send" id="reviseBtn" onclick="reviseDraft()" style="flex-shrink:0; padding:10px 16px;">Revise</button>
                     </div>
                     <p class="settings-info" id="reviseStatus"></p>
