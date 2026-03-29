@@ -321,6 +321,7 @@
             <div class="stat-card"><div class="label">Total Unlabelled</div><div class="value blue" id="inboxStatTotal">-</div></div>
             <div class="stat-card"><div class="label">AI Suggested</div><div class="value amber" id="inboxStatSuggested">-</div></div>
             <div class="stat-card"><div class="label">Applied Today</div><div class="value green" id="inboxStatApplied">-</div></div>
+            <div class="stat-card"><div class="label">AI Accuracy (30 day)</div><div class="value" id="inboxStatAccuracy" style="color:#6366f1;">-</div><div style="font-size:11px; color:#94a3b8; margin-top:2px;" id="inboxStatAccuracyDetail"></div></div>
         </div>
 
         <div class="email-list" id="emailList">
@@ -1166,10 +1167,13 @@
                 });
             }
 
-            // Track corrections if user changed the suggestion
+            // Track accuracy and corrections
             const suggestion = inboxSuggestions[emailIndex];
-            if (suggestion && suggestion.label !== labelName) {
-                storeCorrection(email, suggestion.label, labelName);
+            if (suggestion) {
+                logAiAccuracy(suggestion.label, labelName);
+                if (suggestion.label !== labelName) {
+                    storeCorrection(email, suggestion.label, labelName);
+                }
             }
 
             showSuccess('Applied "' + labelName + '" and removed from inbox.');
@@ -1244,10 +1248,13 @@
                     });
                 }
 
-                // Track corrections
+                // Track accuracy and corrections
                 const suggestion = inboxSuggestions[index];
-                if (suggestion && suggestion.label !== labelName) {
-                    storeCorrection(email, suggestion.label, labelName);
+                if (suggestion) {
+                    logAiAccuracy(suggestion.label, labelName);
+                    if (suggestion.label !== labelName) {
+                        storeCorrection(email, suggestion.label, labelName);
+                    }
                 }
 
                 successCount++;
@@ -1310,6 +1317,32 @@
     // ============================================================
     // CORRECTIONS / LEARNING
     // ============================================================
+    function logAiAccuracy(suggestedLabel, appliedLabel) {
+        let log = [];
+        try { log = JSON.parse(localStorage.getItem('ai_accuracy_log') || '[]'); } catch {}
+        log.push({
+            date: new Date().toISOString(),
+            suggested: suggestedLabel,
+            applied: appliedLabel,
+            correct: suggestedLabel === appliedLabel
+        });
+        // Keep last 500 entries
+        if (log.length > 500) log = log.slice(-500);
+        localStorage.setItem('ai_accuracy_log', JSON.stringify(log));
+    }
+
+    function getAiAccuracy30Day() {
+        let log = [];
+        try { log = JSON.parse(localStorage.getItem('ai_accuracy_log') || '[]'); } catch {}
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 30);
+        const recent = log.filter(e => new Date(e.date) >= cutoff);
+        if (recent.length === 0) return { total: 0, correct: 0, pct: '-' };
+        const correct = recent.filter(e => e.correct).length;
+        const pct = Math.round((correct / recent.length) * 100);
+        return { total: recent.length, correct, pct: pct + '%' };
+    }
+
     function storeCorrection(email, suggestedLabel, correctedLabel) {
         let corrections = [];
         try { corrections = JSON.parse(localStorage.getItem('label_corrections') || '[]'); } catch {}
@@ -1834,6 +1867,16 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         document.getElementById('inboxStatTotal').textContent = total;
         document.getElementById('inboxStatSuggested').textContent = suggested;
         document.getElementById('inboxStatApplied').textContent = appliedTodayCount;
+
+        const accuracy = getAiAccuracy30Day();
+        const accEl = document.getElementById('inboxStatAccuracy');
+        accEl.textContent = accuracy.pct;
+        // Colour based on accuracy
+        if (accuracy.total === 0) { accEl.style.color = '#94a3b8'; }
+        else if (parseInt(accuracy.pct) >= 80) { accEl.style.color = '#22c55e'; }
+        else if (parseInt(accuracy.pct) >= 60) { accEl.style.color = '#f59e0b'; }
+        else { accEl.style.color = '#ef4444'; }
+        document.getElementById('inboxStatAccuracyDetail').textContent = accuracy.total > 0 ? `${accuracy.correct} of ${accuracy.total} correct` : '';
     }
 
     function escapeHtml(str) {
