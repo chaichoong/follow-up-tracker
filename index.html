@@ -311,7 +311,8 @@
             .email-row-summary.topay-row,
             .email-row-summary.archive-row,
             .email-row-summary.newsletter-row,
-            .email-row-summary.delete-row {
+            .email-row-summary.delete-row,
+            .email-row-summary.global-row {
                 grid-template-columns: 28px 1fr auto !important;
                 gap: 4px; padding: 10px 12px;
             }
@@ -400,20 +401,41 @@
         .search-bar {
             margin-bottom: 16px; position: relative;
         }
-        .search-bar input {
-            width: 100%; padding: 10px 40px 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px;
+        .search-bar-row {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .search-bar-row input {
+            flex: 1; padding: 10px 40px 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px;
             font-size: 14px; font-family: inherit; color: #1e293b; outline: none; background: #ffffff;
         }
-        .search-bar input:focus { border-color: #6366f1; }
-        .search-bar input::placeholder { color: #94a3b8; }
+        .search-bar-row input:focus { border-color: #6366f1; }
+        .search-bar-row input::placeholder { color: #94a3b8; }
+        .search-input-wrap { position: relative; flex: 1; }
         .search-clear {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer;
             padding: 4px 8px; display: none;
         }
         .search-clear:hover { color: #475569; }
+        .search-scope-btn {
+            padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+            cursor: pointer; border: 1px solid #e2e8f0; white-space: nowrap; transition: all 0.15s;
+        }
+        .search-scope-btn.local { background: #f1f5f9; color: #475569; }
+        .search-scope-btn.global { background: #6366f1; color: #ffffff; border-color: #6366f1; }
         .search-info {
             font-size: 12px; color: #64748b; margin-top: 6px;
+        }
+        .global-label-tag {
+            display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px;
+            border-radius: 4px; background: #ede9fe; color: #6366f1; margin-left: 8px; vertical-align: middle;
+        }
+        .email-list-header.global-header {
+            grid-template-columns: 40px 1fr 140px 100px 80px 40px;
+        }
+        .email-row-summary.global-row {
+            display: grid; grid-template-columns: 40px 1fr 140px 100px 80px 40px;
+            padding: 14px 20px; cursor: pointer; align-items: center;
         }
 
         /* Pagination Bar */
@@ -483,6 +505,11 @@
             .backup-indicator { font-size: 10px; }
             .cloud-sync-indicator { font-size: 11px; }
             .audit-log-list { max-height: 200px; }
+            .search-bar-row { gap: 6px; }
+            .search-scope-btn { padding: 6px 10px; font-size: 11px; }
+            .search-info { font-size: 11px; }
+            .global-label-tag { font-size: 9px; padding: 1px 5px; margin-left: 4px; }
+            .email-row-summary.global-row .global-label-tag { display: block; margin-left: 0; margin-top: 2px; }
         }
 
         /* Small phones */
@@ -546,8 +573,13 @@
         </div>
 
         <div class="search-bar" id="searchBar" style="display:none;">
-            <input type="text" id="searchInput" placeholder="Search by subject, sender, snippet, or email body..." oninput="handleSearchInput()" />
-            <button class="search-clear" id="searchClear" onclick="clearSearch()">&times;</button>
+            <div class="search-bar-row">
+                <div class="search-input-wrap">
+                    <input type="text" id="searchInput" placeholder="Search by subject, sender, snippet, or email body..." oninput="handleSearchInput()" onkeydown="if(event.key==='Enter'){event.preventDefault(); if(globalSearchMode) runGlobalSearch();}" />
+                    <button class="search-clear" id="searchClear" onclick="clearSearch()">&times;</button>
+                </div>
+                <button class="search-scope-btn local" id="searchScopeBtn" onclick="toggleSearchScope()">This Label</button>
+            </div>
             <div class="search-info" id="searchInfo" style="display:none;"></div>
         </div>
 
@@ -733,6 +765,9 @@
     // Search state
     let searchDebounceTimer = null;
     let searchQuery = '';
+    let globalSearchMode = false;
+    let globalSearchResults = null; // stores emails from global search
+    let savedLabelEmails = null; // saves current label emails while global search is active
 
     // Undo state
     let lastUndoAction = null;
@@ -2336,6 +2371,34 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                 lastUpdateHtml = `<span style="color:#f59e0b; font-weight:600;" title="${d.toLocaleDateString()}">${daysAgo}d ago</span>`;
             }
 
+            // Global search results view
+            if (globalSearchResults) {
+                return `
+                <div class="email-row" id="row-${i}">
+                    <div class="email-row-summary global-row" onclick="toggleRow(${i}); return false;">
+                        <div class="row-number">${displayNum}</div>
+                        <div class="email-subject-col">
+                            <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
+                            <div class="email-from">${escapeHtml(email.from)}${email.messageCount > 1 ? ' &middot; ' + email.messageCount + ' messages' : ''}</div>
+                        </div>
+                        <div><span class="global-label-tag">${escapeHtml(email._globalLabel || 'Unlabelled')}</span></div>
+                        <div class="email-date">${formatDate(email.lastDate)}</div>
+                        <div class="days-old ${getDaysClass(email.daysOld)}" id="days-${i}">${email.daysOld}d</div>
+                        <div class="expand-icon">&#9662;</div>
+                    </div>
+                    <div class="email-body">
+                        <div class="email-meta">
+                            <div><strong>From:</strong> ${escapeHtml(email.fromFull)}</div>
+                            <div><strong>Label:</strong> ${escapeHtml(email._globalLabel || 'Unlabelled')}</div>
+                            <div><strong>First email:</strong> ${formatDate(email.firstDate)}</div>
+                            <div><strong>Last activity:</strong> ${formatDate(email.lastDate)}</div>
+                            <div><strong>Messages:</strong> ${email.messageCount}</div>
+                        </div>
+                        ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
+                    </div>
+                </div>`;
+            }
+
             if (toPay) {
                 return `
                 <div class="email-row" id="row-${i}">
@@ -2508,7 +2571,9 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
 
     // Wrapper that calls the right render function with pagination
     function renderEmailsWithPagination() {
-        if (isInboxView) {
+        if (globalSearchResults) {
+            renderEmails(allEmails);
+        } else if (isInboxView) {
             renderInboxEmails(allEmails);
         } else {
             renderEmails(allEmails);
@@ -3225,6 +3290,33 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
     // ============================================================
     // SEARCH & FILTER
     // ============================================================
+    function toggleSearchScope() {
+        globalSearchMode = !globalSearchMode;
+        const btn = document.getElementById('searchScopeBtn');
+        if (globalSearchMode) {
+            btn.textContent = 'All Emails';
+            btn.className = 'search-scope-btn global';
+            document.getElementById('searchInput').placeholder = 'Search ALL emails across all labels (press Enter to search)...';
+        } else {
+            btn.textContent = 'This Label';
+            btn.className = 'search-scope-btn local';
+            document.getElementById('searchInput').placeholder = 'Search by subject, sender, snippet, or email body...';
+            // Restore original label emails if we were in global mode
+            if (savedLabelEmails) {
+                allEmails = savedLabelEmails;
+                savedLabelEmails = null;
+                globalSearchResults = null;
+            }
+        }
+        // Re-run search with current query
+        const query = document.getElementById('searchInput').value.trim();
+        if (query && !globalSearchMode) {
+            handleSearchInput();
+        } else if (!query) {
+            clearSearch();
+        }
+    }
+
     function handleSearchInput() {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(() => {
@@ -3237,15 +3329,140 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
                 filteredEmails = null;
                 clearBtn.style.display = 'none';
                 infoEl.style.display = 'none';
-            } else {
-                clearBtn.style.display = 'block';
-                filteredEmails = getFilteredEmails();
-                infoEl.style.display = 'block';
-                infoEl.textContent = `Showing ${filteredEmails.length} of ${allEmails.length} emails`;
+                // Restore original emails if coming back from global search
+                if (savedLabelEmails) {
+                    allEmails = savedLabelEmails;
+                    savedLabelEmails = null;
+                    globalSearchResults = null;
+                }
+                currentPage = 1;
+                renderEmailsWithPagination();
+                return;
             }
+
+            clearBtn.style.display = 'block';
+
+            if (globalSearchMode) {
+                // Don't auto-search in global mode - wait for Enter key
+                infoEl.style.display = 'block';
+                infoEl.textContent = 'Press Enter to search all emails...';
+                return;
+            }
+
+            // Local search within current label
+            filteredEmails = getFilteredEmails();
+            infoEl.style.display = 'block';
+            infoEl.textContent = `Showing ${filteredEmails.length} of ${allEmails.length} emails`;
             currentPage = 1;
             renderEmailsWithPagination();
         }, 300);
+    }
+
+    async function runGlobalSearch() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+
+        const infoEl = document.getElementById('searchInfo');
+        infoEl.style.display = 'block';
+        infoEl.textContent = 'Searching all emails...';
+        document.getElementById('searchClear').style.display = 'block';
+
+        // Save current label emails so we can restore them
+        if (!savedLabelEmails) {
+            savedLabelEmails = [...allEmails];
+        }
+
+        try {
+            // Use Gmail API search
+            let searchMessages = [];
+            let pageToken = null;
+            let fetched = 0;
+            const maxResults = 100; // Cap at 100 results for speed
+
+            do {
+                const params = { userId: 'me', q: query, maxResults: 50 };
+                if (pageToken) params.pageToken = pageToken;
+                const listResp = await gapi.client.gmail.users.messages.list(params);
+                const msgs = listResp.result.messages || [];
+                searchMessages = searchMessages.concat(msgs);
+                pageToken = listResp.result.nextPageToken;
+                fetched += msgs.length;
+            } while (pageToken && fetched < maxResults);
+
+            if (searchMessages.length === 0) {
+                infoEl.textContent = 'No emails found matching "' + query + '"';
+                allEmails = [];
+                filteredEmails = null;
+                currentPage = 1;
+                renderEmailsWithPagination();
+                return;
+            }
+
+            infoEl.textContent = `Loading ${searchMessages.length} results...`;
+
+            // Get unique thread IDs
+            const threadIds = [...new Set(searchMessages.map(m => m.threadId))];
+
+            // Fetch thread details in batches of 10
+            const searchResults = [];
+            for (let i = 0; i < threadIds.length; i += 10) {
+                const batch = threadIds.slice(i, Math.min(i + 10, threadIds.length));
+                const threads = await Promise.all(
+                    batch.map(tid =>
+                        gapi.client.gmail.users.threads.get({
+                            userId: 'me', id: tid, format: 'full'
+                        }).then(r => r.result).catch(() => null)
+                    )
+                );
+
+                for (const thread of threads) {
+                    if (!thread) continue;
+                    try {
+                        const email = parseThread(thread);
+                        // Find which numbered label this thread has
+                        const firstMsg = thread.messages[0];
+                        const msgLabels = firstMsg.labelIds || [];
+                        let labelName = 'Unlabelled';
+                        for (const l of allLabels) {
+                            if (msgLabels.includes(l.id)) {
+                                labelName = l.name;
+                                break;
+                            }
+                        }
+                        email._globalLabel = labelName;
+                        searchResults.push(email);
+                    } catch (e) {
+                        console.error('Parse error:', e);
+                    }
+                }
+            }
+
+            // Sort by newest first
+            searchResults.sort((a, b) => b.lastDate - a.lastDate);
+
+            allEmails = searchResults;
+            filteredEmails = null;
+            globalSearchResults = searchResults;
+            currentPage = 1;
+            infoEl.textContent = `Found ${searchResults.length} emails across all labels for "${query}"`;
+
+            // Switch to a generic view for rendering
+            const header = document.getElementById('emailListHeader');
+            header.className = 'email-list-header global-header';
+            header.innerHTML = `
+                <div>#</div>
+                <div>Subject / From</div>
+                <div>Label</div>
+                <div>Date</div>
+                <div>Age</div>
+                <div></div>
+            `;
+
+            renderEmailsWithPagination();
+        } catch (err) {
+            console.error('Global search error:', err);
+            infoEl.textContent = 'Search failed: ' + (err.message || 'Unknown error');
+        }
     }
 
     function getFilteredEmails() {
@@ -3281,7 +3498,19 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         filteredEmails = null;
         document.getElementById('searchClear').style.display = 'none';
         document.getElementById('searchInfo').style.display = 'none';
+        // Restore original emails if coming back from global search
+        if (savedLabelEmails) {
+            allEmails = savedLabelEmails;
+            savedLabelEmails = null;
+            globalSearchResults = null;
+        }
         currentPage = 1;
+        // Restore the correct header for the current view
+        if (isInboxView) {
+            switchToInboxView();
+        } else {
+            switchToLabelView();
+        }
         renderEmailsWithPagination();
     }
 
