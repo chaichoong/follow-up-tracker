@@ -88,6 +88,9 @@
         .email-list-header.topay-header {
             grid-template-columns: 40px 1fr 110px 70px 110px 110px 100px 120px 40px;
         }
+        .email-list-header.archive-header {
+            grid-template-columns: 40px 1fr 160px 80px 120px 40px;
+        }
         .email-row { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
         .email-row:last-child { border-bottom: none; }
         .email-row-summary {
@@ -99,6 +102,9 @@
         }
         .email-row-summary.topay-row {
             grid-template-columns: 40px 1fr 110px 70px 110px 110px 100px 120px 40px;
+        }
+        .email-row-summary.archive-row {
+            grid-template-columns: 40px 1fr 160px 80px 120px 40px;
         }
         .email-row-summary:hover { background: #f8fafc; }
         .email-row.expanded .email-row-summary { background: #f1f5f9; }
@@ -841,7 +847,12 @@
                 }
             }
 
-            allEmails.sort((a, b) => a.lastDate - b.lastDate);
+            // Paid/Responded: newest first. Others: oldest first.
+            if (isArchiveView()) {
+                allEmails.sort((a, b) => b.lastDate - a.lastDate);
+            } else {
+                allEmails.sort((a, b) => a.lastDate - b.lastDate);
+            }
             renderEmails(allEmails);
             updateStats(allEmails);
             document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
@@ -1038,6 +1049,18 @@
         return currentLabel.toLowerCase().includes('to respond') || currentLabel.startsWith('1');
     }
 
+    function isPaidView() {
+        return currentLabel.toLowerCase().includes('paid') || currentLabel.startsWith('4');
+    }
+
+    function isRespondedView() {
+        return currentLabel.toLowerCase().includes('responded') || currentLabel.startsWith('5');
+    }
+
+    function isArchiveView() {
+        return isPaidView() || isRespondedView();
+    }
+
     function useTighterThresholds() {
         return isToPayView() || isFollowUpView() || isToRespondView();
     }
@@ -1058,6 +1081,16 @@
                 <div>Last Activity</div>
                 <div>Last Update</div>
                 <div>Action</div>
+                <div>Move Label</div>
+                <div></div>
+            `;
+        } else if (isArchiveView()) {
+            header.className = 'email-list-header archive-header';
+            header.innerHTML = `
+                <div>#</div>
+                <div>Subject / From</div>
+                <div>Last Activity</div>
+                <div>Days Old</div>
                 <div>Move Label</div>
                 <div></div>
             `;
@@ -1592,6 +1625,11 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     }
 
     function getDaysClass(days) {
+        if (isArchiveView()) {
+            if (days >= 90) return 'critical';
+            if (days >= 30) return 'warning';
+            return 'ok';
+        }
         if (useTighterThresholds()) {
             if (days >= 14) return 'critical';
             if (days >= 7) return 'warning';
@@ -1699,6 +1737,35 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                             <div><strong>Invoice received:</strong> ${formatDate(email.firstDate)}</div>
                             <div><strong>Last activity:</strong> ${formatDate(email.lastDate)}</div>
                             <div><strong>Last update sent:</strong> ${lastDelay ? new Date(lastDelay).toLocaleDateString() : '-'}</div>
+                            <div><strong>Messages:</strong> ${email.messageCount}</div>
+                        </div>
+                        ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
+                    </div>
+                </div>`;
+            } else if (isArchiveView()) {
+                return `
+                <div class="email-row" id="row-${i}">
+                    <div class="email-row-summary archive-row" onclick="toggleRow(${i}); return false;">
+                        <div class="row-number">${i + 1}</div>
+                        <div class="email-subject-col">
+                            <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
+                            <div class="email-from">${escapeHtml(email.from)}${email.messageCount > 1 ? ' &middot; ' + email.messageCount + ' messages' : ''}</div>
+                        </div>
+                        <div class="email-date">${formatDate(email.lastDate)}</div>
+                        <div class="days-old ${getDaysClass(email.daysOld)}" id="days-${i}">${email.daysOld}d</div>
+                        <div class="label-change-col" onclick="event.stopPropagation();">
+                            <select class="label-change-select" id="labelChg-${i}" onchange="changeLabel(${i}, this.value)">
+                                <option value="">Move to...</option>
+                                ${labelOptions}
+                            </select>
+                        </div>
+                        <div class="expand-icon">&#9662;</div>
+                    </div>
+                    <div class="email-body">
+                        <div class="email-meta">
+                            <div><strong>From:</strong> ${escapeHtml(email.fromFull)}</div>
+                            <div><strong>First email:</strong> ${formatDate(email.firstDate)}</div>
+                            <div><strong>Last activity:</strong> ${formatDate(email.lastDate)}</div>
                             <div><strong>Messages:</strong> ${email.messageCount}</div>
                         </div>
                         ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
@@ -1850,7 +1917,14 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     function updateStats(emails) {
         document.getElementById('statTotal').textContent = emails.length;
 
-        if (useTighterThresholds()) {
+        if (isArchiveView()) {
+            document.getElementById('statCriticalLabel').textContent = 'Long Term (90+ days)';
+            document.getElementById('statWarningLabel').textContent = 'Medium Term (30-89 days)';
+            document.getElementById('statRecentLabel').innerHTML = 'Recent (&lt;30 days)';
+            document.getElementById('statCritical').textContent = emails.filter(e => e.daysOld >= 90).length;
+            document.getElementById('statWarning').textContent = emails.filter(e => e.daysOld >= 30 && e.daysOld < 90).length;
+            document.getElementById('statRecent').textContent = emails.filter(e => e.daysOld < 30).length;
+        } else if (useTighterThresholds()) {
             document.getElementById('statCriticalLabel').textContent = 'Critical (14+ days)';
             document.getElementById('statWarningLabel').textContent = 'Warning (7-13 days)';
             document.getElementById('statRecentLabel').innerHTML = 'Recent (&lt;7 days)';
