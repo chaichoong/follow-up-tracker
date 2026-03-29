@@ -1029,6 +1029,14 @@
         return currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
     }
 
+    function isFollowUpView() {
+        return currentLabel.toLowerCase().includes('follow') || currentLabel.startsWith('2');
+    }
+
+    function useTighterThresholds() {
+        return isToPayView() || isFollowUpView();
+    }
+
     function switchToLabelView() {
         isInboxView = false;
         document.getElementById('statsBar').style.display = 'flex';
@@ -1547,7 +1555,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     }
 
     function getDaysClass(days) {
-        if (isToPayView()) {
+        if (useTighterThresholds()) {
             if (days >= 14) return 'critical';
             if (days >= 7) return 'warning';
             return 'ok';
@@ -1805,7 +1813,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     function updateStats(emails) {
         document.getElementById('statTotal').textContent = emails.length;
 
-        if (isToPayView()) {
+        if (useTighterThresholds()) {
             document.getElementById('statCriticalLabel').textContent = 'Critical (14+ days)';
             document.getElementById('statWarningLabel').textContent = 'Warning (7-13 days)';
             document.getElementById('statRecentLabel').innerHTML = 'Recent (&lt;7 days)';
