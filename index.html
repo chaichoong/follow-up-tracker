@@ -1526,6 +1526,31 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         return 'ok';
     }
 
+    function getActionButtonLabel() {
+        const cl = currentLabel.toLowerCase();
+        if (cl.includes('to respond') || cl.startsWith('1')) return 'Respond';
+        if (cl.includes('to pay') || cl.startsWith('3')) return 'Delay Payment';
+        return 'Follow up';
+    }
+
+    // Delay payment tracking
+    function getDelayPaymentLog() {
+        return JSON.parse(localStorage.getItem('delay_payment_log') || '[]');
+    }
+
+    function logDelayPayment(threadId, subject, recipient) {
+        const log = getDelayPaymentLog();
+        log.push({ threadId, subject, recipient, date: new Date().toISOString() });
+        localStorage.setItem('delay_payment_log', JSON.stringify(log));
+    }
+
+    function getLastDelayDate(threadId) {
+        const log = getDelayPaymentLog();
+        const entries = log.filter(e => e.threadId === threadId);
+        if (entries.length === 0) return null;
+        return entries[entries.length - 1].date;
+    }
+
     function isRealAttachment(a) {
         return !a.mimeType.startsWith('image/');
     }
@@ -1565,11 +1590,19 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                     <div class="row-number">${i + 1}</div>
                     <div class="email-subject-col">
                         <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
-                        <div class="email-from">${escapeHtml(email.from)}${email.messageCount > 1 ? ' &middot; ' + email.messageCount + ' messages' : ''}</div>
+                        <div class="email-from">${escapeHtml(email.from)}${email.messageCount > 1 ? ' &middot; ' + email.messageCount + ' messages' : ''}${(() => {
+                            const lastDelay = getLastDelayDate(email.threadId);
+                            if (lastDelay && (currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3'))) {
+                                const d = new Date(lastDelay);
+                                const daysAgo = Math.floor((new Date() - d) / (1000*60*60*24));
+                                return ' &middot; <span style="color:#f59e0b; font-weight:600;" title="Last delay payment sent: ' + d.toLocaleDateString() + '">&#9200; Delayed ' + daysAgo + 'd ago</span>';
+                            }
+                            return '';
+                        })()}</div>
                     </div>
                     <div class="email-date">${formatDate(email.lastDate)}</div>
                     <div class="days-old ${getDaysClass(email.daysOld)}" id="days-${i}">${email.daysOld}d</div>
-                    <div class="action-col"><button class="followup-btn" onclick="event.stopPropagation(); draftFollowUp(${i})">${currentLabel === '1: to respond' ? 'Respond' : 'Follow up'}</button></div>
+                    <div class="action-col"><button class="followup-btn" onclick="event.stopPropagation(); draftFollowUp(${i})">${getActionButtonLabel()}</button></div>
                     <div class="label-change-col" onclick="event.stopPropagation();">
                         <select class="label-change-select" id="labelChg-${i}" onchange="changeLabel(${i}, this.value)">
                             <option value="">Move to...</option>
@@ -1820,7 +1853,8 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         document.getElementById('sendFollowUpBtn').disabled = true;
         document.getElementById('draftFeedback').value = '';
         document.getElementById('reviseStatus').textContent = '';
-        document.getElementById('draftModalTitle').textContent = 'Draft Response: ' + email.subject;
+        const isToPayDraft = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
+        document.getElementById('draftModalTitle').textContent = (isToPayDraft ? 'Delay Payment: ' : 'Draft Response: ') + email.subject;
 
         // Populate From dropdown
         const fromSelect = document.getElementById('draftFrom');
@@ -1849,7 +1883,36 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
             amendmentContext = `\n\nIMPORTANT - Learn from these past feedback/amendments the user has given on previous drafts. Apply these lessons to this draft:\n${recent.map(a => `- Context: "${a.subject}" → Feedback: "${a.feedback}"`).join('\n')}`;
         }
 
-        const prompt = `You are drafting a polite, professional response email on behalf of ${senderName}.
+        // Determine prompt based on current label
+        const isToPayLabel = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
+        const delayLog = isToPayLabel ? getDelayPaymentLog().filter(e => e.threadId === email.threadId) : [];
+        const delayHistory = delayLog.length > 0
+            ? `\n\nPREVIOUS DELAY COMMUNICATIONS sent for this thread:\n${delayLog.map(e => `- ${new Date(e.date).toLocaleDateString()}: Delay payment email sent`).join('\n')}\nTake this history into account - acknowledge previous communications if appropriate and don't repeat the same wording.`
+            : '';
+
+        let prompt;
+        if (isToPayLabel) {
+            prompt = `You are drafting a professional email on behalf of ${senderName} to request a delay or extension on a payment.
+
+The email thread subject is: "${email.subject}"
+The recipient is: ${recipientName} (${recipientEmail})
+It has been ${email.daysOld} days since the last communication.
+
+Here is the recent conversation context:
+${lastMessages}
+${delayHistory}
+${amendmentContext}
+
+Draft a professional, empathetic email explaining that we are currently experiencing temporary financial difficulties and are requesting an extension or delay on this payment. The tone should be:
+- Professional and respectful
+- Honest about the situation without being overly detailed
+- Reassuring that we intend to fulfil our obligations
+- Requesting a specific arrangement (e.g. delay of 2-4 weeks, or a payment plan)
+- Brief (4-6 sentences)
+
+Do not include a subject line - just the body text. Sign off as ${senderName}.`;
+        } else {
+            prompt = `You are drafting a polite, professional response email on behalf of ${senderName}.
 
 The email thread subject is: "${email.subject}"
 The recipient is: ${recipientName} (${recipientEmail})
@@ -1860,6 +1923,7 @@ ${lastMessages}
 ${amendmentContext}
 
 Draft a brief, professional response email. Keep it concise (3-5 sentences). Be professional but warm. Reference the original topic naturally. Do not include a subject line - just the body text. Sign off as ${senderName}.`;
+        }
 
         try {
             const response = await fetch(CLAUDE_PROXY, {
@@ -2011,16 +2075,23 @@ Draft a brief, professional response email. Keep it concise (3-5 sentences). Be 
 
             await gapi.client.gmail.users.messages.send(sendParams);
 
-            // Move label: remove "1: to respond", add destination label
+            // Log delay payment if sending from "to pay" label
+            const isToPaySend = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
+            if (isToPaySend && currentDraftEmail) {
+                logDelayPayment(currentDraftEmail.threadId, currentDraftEmail.subject, to);
+            }
+
+            // Move label: remove current label, add destination label
             const destLabelName = destination === 'responded' ? '5: responded' : '2: to follow-up';
-            const fromLabelObj = allLabelsRaw.find(l => l.name === '1: to respond');
+            const fromLabelObj = allLabelsRaw.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
             const destLabelObj = allLabelsRaw.find(l => l.name === destLabelName);
 
             if (fromLabelObj && destLabelObj && currentDraftEmail?.msgIds) {
-                for (const msgId of currentDraftEmail.msgIds) {
+                for (let m = 0; m < currentDraftEmail.msgIds.length; m++) {
+                    if (m > 0) await new Promise(r => setTimeout(r, 300));
                     await gapi.client.gmail.users.messages.modify({
                         userId: 'me',
-                        id: msgId,
+                        id: currentDraftEmail.msgIds[m],
                         resource: {
                             addLabelIds: [destLabelObj.id],
                             removeLabelIds: [fromLabelObj.id]
