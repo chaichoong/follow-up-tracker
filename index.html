@@ -514,6 +514,7 @@
         // Load applied today count from localStorage
         const todayKey = 'applied_today_' + new Date().toISOString().slice(0, 10);
         appliedTodayCount = parseInt(localStorage.getItem(todayKey) || '0');
+        startAutoRefresh();
     }
 
     // Labels that should show a count in the dropdown
@@ -710,6 +711,48 @@
 
         btn.disabled = false;
         btn.textContent = 'Refresh';
+    }
+
+    // ============================================================
+    // AUTO-REFRESH (every 15 minutes, only when idle)
+    // ============================================================
+    let autoRefreshTimer = null;
+
+    function isUserActive() {
+        // Draft modal open?
+        const draftModal = document.getElementById('draftModal');
+        if (draftModal && draftModal.classList.contains('active')) return true;
+
+        // Any email row expanded?
+        const expandedRows = document.querySelectorAll('.email-row.expanded');
+        if (expandedRows.length > 0) return true;
+
+        // Any inbox Apply dropdown changed from default?
+        if (isInboxView) {
+            for (let i = 0; i < allEmails.length; i++) {
+                const sel = document.getElementById('inboxApply-' + i);
+                if (sel && sel.value && sel.selectedIndex !== 0) {
+                    // Check if it was manually changed (different from AI suggestion)
+                    const suggestion = inboxSuggestions[i];
+                    const suggestedLabel = suggestion ? suggestion.label : '';
+                    if (sel.value !== suggestedLabel) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function startAutoRefresh() {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(() => {
+            if (!isUserActive()) {
+                console.log('Auto-refresh triggered (user idle)');
+                loadEmails();
+            } else {
+                console.log('Auto-refresh skipped (user active)');
+            }
+        }, 15 * 60 * 1000); // 15 minutes
     }
 
     async function loadLabelEmails() {
