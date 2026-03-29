@@ -1614,7 +1614,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
 
         container.innerHTML = emails.map((email, i) => {
             const lastDelay = getLastDelayDate(email.threadId);
-            let lastUpdateHtml = '<span style="color:#94a3b8;">None</span>';
+            let lastUpdateHtml = '<span style="color:#94a3b8;">-</span>';
             if (lastDelay) {
                 const d = new Date(lastDelay);
                 const daysAgo = Math.floor((new Date() - d) / (1000*60*60*24));
@@ -1648,7 +1648,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                             <div><strong>From:</strong> ${escapeHtml(email.fromFull)}</div>
                             <div><strong>Invoice received:</strong> ${formatDate(email.firstDate)}</div>
                             <div><strong>Last activity:</strong> ${formatDate(email.lastDate)}</div>
-                            <div><strong>Last update sent:</strong> ${lastDelay ? new Date(lastDelay).toLocaleDateString() : 'None'}</div>
+                            <div><strong>Last update sent:</strong> ${lastDelay ? new Date(lastDelay).toLocaleDateString() : '-'}</div>
                             <div><strong>Messages:</strong> ${email.messageCount}</div>
                         </div>
                         ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
