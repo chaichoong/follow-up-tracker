@@ -1910,6 +1910,8 @@ Draft a professional, empathetic email explaining that we are currently experien
 - Requesting a specific arrangement (e.g. delay of 2-4 weeks, or a payment plan)
 - Brief (4-6 sentences)
 
+IMPORTANT STYLE RULE: Never use em dashes (—) or long hyphens (–) anywhere in the email. Use commas, full stops, or restructure the sentence instead. This is critical for a natural, human tone.
+
 Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         } else {
             prompt = `You are drafting a polite, professional response email on behalf of ${senderName}.
@@ -1922,7 +1924,11 @@ Here is the recent conversation context:
 ${lastMessages}
 ${amendmentContext}
 
-Draft a brief, professional response email. Keep it concise (3-5 sentences). Be professional but warm. Reference the original topic naturally. Do not include a subject line - just the body text. Sign off as ${senderName}.`;
+Draft a brief, professional response email. Keep it concise (3-5 sentences). Be professional but warm. Reference the original topic naturally.
+
+IMPORTANT STYLE RULE: Never use em dashes (—) or long hyphens (–) anywhere in the email. Use commas, full stops, or restructure the sentence instead. This is critical for a natural, human tone.
+
+Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         }
 
         try {
@@ -1993,7 +1999,7 @@ Draft a brief, professional response email. Keep it concise (3-5 sentences). Be 
                 body: JSON.stringify({
                     model: 'claude-sonnet-4-20250514',
                     max_tokens: 500,
-                    messages: [{ role: 'user', content: `Here is a draft email I wrote on behalf of ${senderName}:\n\n${currentBody}\n\nPlease revise this draft based on the following feedback:\n${feedback}\n\nReturn ONLY the revised email body text. No subject line, no explanations.` }]
+                    messages: [{ role: 'user', content: `Here is a draft email I wrote on behalf of ${senderName}:\n\n${currentBody}\n\nPlease revise this draft based on the following feedback:\n${feedback}\n\nIMPORTANT STYLE RULE: Never use em dashes (—) or long hyphens (–) anywhere in the email. Use commas, full stops, or restructure the sentence instead.\n\nReturn ONLY the revised email body text. No subject line, no explanations.` }]
                 })
             });
 
