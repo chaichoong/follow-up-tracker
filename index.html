@@ -2098,6 +2098,10 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                             <div><strong>Messages:</strong> ${email.messageCount}</div>
                             <div><strong>Unsubscribe:</strong> ${email.unsubscribeMailto ? 'Email available' : (email.unsubscribeUrl ? 'Link available' : 'Not available')}</div>
                         </div>
+                        <div style="padding:10px 0; display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="unsub-btn" onclick="draftUnsubscribeReply(${i})" style="padding:8px 16px; font-size:13px;">Reply to Request Unsubscribe</button>
+                            ${email.unsubscribeUrl ? `<button class="followup-btn" onclick="window.open('${escapeHtml(email.unsubscribeUrl)}', '_blank')" style="padding:8px 16px; font-size:13px;">Open Unsubscribe Link</button>` : ''}
+                        </div>
                         ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
                     </div>
                 </div>`;
@@ -2418,6 +2422,80 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     function clearError() { document.getElementById('errorContainer').innerHTML = ''; }
 
     // ============================================================
+    // DRAFT UNSUBSCRIBE REPLY (Claude AI)
+    // ============================================================
+    async function draftUnsubscribeReply(index) {
+        const email = allEmails[index];
+        currentDraftEmail = email;
+        currentDraftIndex = index;
+
+        document.getElementById('draftModal').classList.add('active');
+        document.getElementById('draftingStatus').style.display = 'block';
+        document.getElementById('draftForm').style.display = 'none';
+        document.getElementById('sendRespondedBtn').disabled = true;
+        document.getElementById('sendFollowUpBtn').disabled = true;
+        document.getElementById('draftFeedback').value = '';
+        document.getElementById('reviseStatus').textContent = '';
+        document.getElementById('draftModalTitle').textContent = 'Unsubscribe Request: ' + email.subject;
+
+        const fromSelect = document.getElementById('draftFrom');
+        if (sendAsAliases.length > 0) {
+            fromSelect.innerHTML = sendAsAliases.map(a => {
+                const display = a.displayName ? `${a.displayName} <${a.sendAsEmail}>` : a.sendAsEmail;
+                return `<option value="${escapeHtml(a.sendAsEmail)}"${a.isPrimary ? ' selected' : ''}>${escapeHtml(display)}</option>`;
+            }).join('');
+        }
+
+        const lastMsg = email.messages[email.messages.length - 1];
+        const emailContent = getPlainText(lastMsg).slice(0, 500);
+        const senderName = localStorage.getItem('sender_name') || 'Kevin';
+
+        const prompt = `You are drafting a polite, professional email on behalf of ${senderName} to request removal from a mailing list / unsubscribe from future emails.
+
+The email is from: ${email.fromFull}
+Subject: "${email.subject}"
+Email content preview: ${emailContent}
+
+Draft a brief (2-3 sentences), polite email requesting to be unsubscribed from their mailing list. Be professional and direct. Ask them to remove our email address from all future communications and marketing lists. Do not include a subject line, just the body text.
+
+IMPORTANT STYLE RULE: Never use em dashes or long hyphens. Use commas, full stops, or restructure the sentence instead.
+
+Sign off as ${senderName}.`;
+
+        try {
+            const response = await fetch(CLAUDE_PROXY, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: 300,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) throw new Error(`API error ${response.status}`);
+
+            const data = await response.json();
+            const draftText = data.content[0].text;
+
+            const originalText = `From: ${lastMsg.from}\nDate: ${formatDate(lastMsg.date)}\n\n${getPlainText(lastMsg).slice(0, 300)}`;
+            document.getElementById('draftOriginal').textContent = originalText;
+
+            document.getElementById('draftTo').value = extractEmail(email.fromFull);
+            document.getElementById('draftSubject').value = 'Unsubscribe Request - ' + email.subject;
+            document.getElementById('draftBody').value = draftText;
+            document.getElementById('draftingStatus').style.display = 'none';
+            document.getElementById('draftForm').style.display = 'block';
+            document.getElementById('sendRespondedBtn').disabled = false;
+            document.getElementById('sendFollowUpBtn').disabled = false;
+
+        } catch (err) {
+            console.error('Claude API error:', err);
+            document.getElementById('draftingStatus').innerHTML = `<div class="error-msg">Failed to draft: ${escapeHtml(err.message)}</div>`;
+        }
+    }
+
+    // ============================================================
     // DRAFT FOLLOW UP (Claude AI via Cloudflare Worker)
     // ============================================================
     async function draftFollowUp(index) {
@@ -2664,6 +2742,11 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
             const isToPaySend = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
             if (isToPaySend && currentDraftEmail) {
                 logDelayPayment(currentDraftEmail.threadId, currentDraftEmail.subject, to);
+            }
+
+            // Log unsubscribe if sending from "delete" label
+            if (isDeleteView() && currentDraftEmail) {
+                logUnsubscribe(currentDraftEmail.threadId, currentDraftEmail.fromEmail, 'reply');
             }
 
             // Move label: remove current label, add destination label
