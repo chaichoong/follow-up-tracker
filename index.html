@@ -655,7 +655,7 @@
     }
 
     // Labels that should show a count in the dropdown
-    const LABELS_WITH_COUNTS = ['1', '2', '3', '8'];
+    const LABELS_WITH_COUNTS = ['1', '2', '3', '8', '9'];
 
     async function fetchLabels() {
         try {
@@ -665,7 +665,7 @@
                 .filter(l => l.type === 'user' && /^[1-9][.:]\s/.test(l.name))
                 .sort((a, b) => a.name.localeCompare(b.name));
 
-            // Fetch counts for selected labels (1, 2, 3, 8)
+            // Fetch counts for selected labels (1, 2, 3, 8, 9)
             const labelCounts = {};
             const countPromises = allLabels
                 .filter(l => LABELS_WITH_COUNTS.includes(l.name.charAt(0)))
@@ -679,8 +679,34 @@
                 });
             await Promise.all(countPromises);
 
+            // Fetch inbox unlabelled count
+            let inboxCount = null;
+            try {
+                const numberedLabelIds = new Set(allLabels.map(l => l.id));
+                const inboxResp = await gapi.client.gmail.users.messages.list({ userId: 'me', labelIds: ['INBOX'], maxResults: 500 });
+                const inboxMsgs = inboxResp.result.messages || [];
+                // Quick check first 500 inbox messages for unlabelled ones
+                let unlabelledCount = 0;
+                const batchSize = 50;
+                for (let i = 0; i < inboxMsgs.length; i += batchSize) {
+                    const batch = inboxMsgs.slice(i, Math.min(i + batchSize, inboxMsgs.length));
+                    const details = await Promise.all(
+                        batch.map(m => gapi.client.gmail.users.messages.get({
+                            userId: 'me', id: m.id, format: 'metadata', metadataHeaders: ['Subject']
+                        }).then(r => r.result).catch(() => null))
+                    );
+                    for (const d of details) {
+                        if (d && d.labelIds && !d.labelIds.some(lid => numberedLabelIds.has(lid))) {
+                            unlabelledCount++;
+                        }
+                    }
+                }
+                inboxCount = unlabelledCount;
+            } catch (e) { inboxCount = null; }
+
             const select = document.getElementById('labelSelect');
-            const inboxOption = `<option value="${INBOX_VALUE}"${currentLabel === INBOX_VALUE ? ' selected' : ''}>Inbox (Unlabelled)</option>`;
+            const inboxCountText = inboxCount !== null ? ` (${inboxCount})` : '';
+            const inboxOption = `<option value="${INBOX_VALUE}"${currentLabel === INBOX_VALUE ? ' selected' : ''}>Inbox (Unlabelled)${inboxCountText}</option>`;
             const labelOptions = allLabels.map(l => {
                 const count = labelCounts[l.name];
                 const countText = count !== undefined && count !== null ? ` (${count})` : '';
@@ -1194,6 +1220,14 @@
         return currentLabel.toLowerCase().includes('delete') || currentLabel.startsWith('7');
     }
 
+    function isTaskCreatedView() {
+        return currentLabel.toLowerCase().includes('task created') || currentLabel.startsWith('8');
+    }
+
+    function isTaskCompletedView() {
+        return currentLabel.toLowerCase().includes('task completed') || currentLabel.startsWith('9');
+    }
+
     // Unsubscribe tracking
     function getUnsubscribeLog() {
         try { return JSON.parse(localStorage.getItem('unsubscribe_log') || '[]'); } catch { return []; }
@@ -1356,7 +1390,7 @@
     }
 
     function useTighterThresholds() {
-        return isToPayView() || isFollowUpView() || isToRespondView();
+        return isToPayView() || isFollowUpView() || isToRespondView() || isTaskCreatedView();
     }
 
     function switchToLabelView() {
@@ -2340,6 +2374,18 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         document.getElementById('statCritical').className = 'value red';
         document.getElementById('statWarning').className = 'value amber';
         document.getElementById('statRecent').className = 'value green';
+
+        if (isTaskCompletedView()) {
+            document.getElementById('statCriticalLabel').textContent = '14-30 days';
+            document.getElementById('statWarningLabel').textContent = '7-14 days';
+            document.getElementById('statRecentLabel').innerHTML = 'Last 7 days';
+            document.getElementById('statCritical').textContent = emails.filter(e => e.daysOld >= 14 && e.daysOld <= 30).length;
+            document.getElementById('statCritical').className = 'value amber';
+            document.getElementById('statWarning').textContent = emails.filter(e => e.daysOld >= 7 && e.daysOld < 14).length;
+            document.getElementById('statWarning').className = 'value amber';
+            document.getElementById('statRecent').textContent = emails.filter(e => e.daysOld < 7).length;
+            return;
+        }
 
         if (isArchiveView()) {
             document.getElementById('statCriticalLabel').textContent = 'Long Term (90+ days)';
