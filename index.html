@@ -1820,6 +1820,26 @@
         }
     }
 
+    function markNewsletterReadAndRefresh(threadId) {
+        markNewsletterRead(threadId);
+        // Reapply filter and refresh view
+        if (newsletterFilter !== 'all') {
+            applyNewsletterFilterAndSearch();
+            currentPage = 1;
+            renderEmailsWithPagination();
+        } else {
+            // Just update the row visually without full re-render
+            const idx = allEmails.findIndex(e => e.threadId === threadId);
+            if (idx !== -1) {
+                const row = document.getElementById('row-' + idx);
+                if (row) row.classList.add('newsletter-read');
+                const btn = row ? row.querySelector('.read-btn') : null;
+                if (btn) { btn.textContent = 'Read'; btn.className = 'read-btn already-read'; btn.disabled = true; }
+            }
+        }
+        updateStats(allEmails);
+    }
+
     function isNewsletterRead(threadId) {
         return getReadNewsletters().includes(threadId);
     }
@@ -1830,7 +1850,14 @@
             if (!read.includes(email.threadId)) read.push(email.threadId);
         }
         localStorage.setItem('read_newsletters', JSON.stringify(read));
-        renderEmails(allEmails);
+        // Reapply newsletter filter (if "Unread" is active, list will now be empty)
+        if (newsletterFilter !== 'all') {
+            applyNewsletterFilterAndSearch();
+        } else {
+            filteredEmails = null;
+        }
+        currentPage = 1;
+        renderEmailsWithPagination();
         updateStats(allEmails);
         showSuccess('All newsletters marked as read.');
     }
@@ -2713,7 +2740,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                         <div class="action-col" onclick="event.stopPropagation();">
                             ${isRead
                                 ? '<button class="read-btn already-read" disabled>Read</button>'
-                                : `<button class="read-btn" onclick="markNewsletterRead('${email.threadId}'); this.textContent='Read'; this.className='read-btn already-read'; this.disabled=true; document.getElementById('row-${i}').classList.add('newsletter-read'); updateStats(allEmails);">Read</button>`}
+                                : `<button class="read-btn" onclick="event.stopPropagation(); markNewsletterReadAndRefresh('${email.threadId}');">Read</button>`}
                         </div>
                         <div class="expand-icon">&#9662;</div>
                     </div>
