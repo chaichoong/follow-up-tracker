@@ -646,7 +646,7 @@
         <div class="modal-body" id="draftModalBody">
             <div class="drafting-status" id="draftingStatus">
                 <div class="spinner"></div>
-                <div>Claude is drafting your follow-up...</div>
+                <div id="draftingStatusText">Claude is drafting your response...</div>
             </div>
             <div id="draftForm" style="display:none;">
                 <div class="modal-field">
@@ -690,6 +690,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeDraftModal()">Cancel</button>
+            <button class="btn-send" id="sendStayBtn" onclick="sendDraft('stay')" disabled style="background:#3b82f6; display:none;">Send</button>
             <button class="btn-send" id="sendRespondedBtn" onclick="sendDraft('responded')" disabled style="background:#22c55e;">Send &rarr; Responded</button>
             <button class="btn-send" id="sendFollowUpBtn" onclick="sendDraft('followup')" disabled style="background:#f59e0b;">Send &rarr; Follow Up</button>
         </div>
@@ -2941,12 +2942,18 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         document.getElementById('draftForm').style.display = 'none';
         document.getElementById('sendRespondedBtn').disabled = true;
         document.getElementById('sendFollowUpBtn').disabled = true;
+        document.getElementById('sendStayBtn').disabled = true;
         document.getElementById('attachmentListPreview').innerHTML = '';
         document.getElementById('attachmentSizeInfo').textContent = '';
         document.getElementById('attachmentInput').value = '';
         document.getElementById('draftFeedback').value = '';
         document.getElementById('reviseStatus').textContent = '';
         document.getElementById('draftModalTitle').textContent = 'Unsubscribe Request: ' + email.subject;
+        document.getElementById('draftingStatusText').textContent = 'Claude is drafting your unsubscribe request...';
+        // Show standard send buttons for unsubscribe
+        document.getElementById('sendStayBtn').style.display = 'none';
+        document.getElementById('sendRespondedBtn').style.display = '';
+        document.getElementById('sendFollowUpBtn').style.display = '';
 
         const fromSelect = document.getElementById('draftFrom');
         if (sendAsAliases.length > 0) {
@@ -3020,6 +3027,7 @@ Sign off as ${senderName}.`;
         document.getElementById('draftForm').style.display = 'none';
         document.getElementById('sendRespondedBtn').disabled = true;
         document.getElementById('sendFollowUpBtn').disabled = true;
+        document.getElementById('sendStayBtn').disabled = true;
         document.getElementById('draftFeedback').value = '';
         document.getElementById('reviseStatus').textContent = '';
         document.getElementById('attachmentListPreview').innerHTML = '';
@@ -3027,6 +3035,20 @@ Sign off as ${senderName}.`;
         document.getElementById('attachmentInput').value = '';
         const isToPayDraft = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
         document.getElementById('draftModalTitle').textContent = (isToPayDraft ? 'Delay Payment: ' : 'Draft Response: ') + email.subject;
+        document.getElementById('draftingStatusText').textContent = isToPayDraft
+            ? 'Claude is drafting a delayed payment message...'
+            : 'Claude is drafting your response...';
+
+        // Show/hide the correct send buttons
+        if (isToPayDraft) {
+            document.getElementById('sendStayBtn').style.display = '';
+            document.getElementById('sendRespondedBtn').style.display = 'none';
+            document.getElementById('sendFollowUpBtn').style.display = 'none';
+        } else {
+            document.getElementById('sendStayBtn').style.display = 'none';
+            document.getElementById('sendRespondedBtn').style.display = '';
+            document.getElementById('sendFollowUpBtn').style.display = '';
+        }
 
         // Populate From dropdown
         const fromSelect = document.getElementById('draftFrom');
@@ -3134,6 +3156,7 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
             document.getElementById('draftForm').style.display = 'block';
             document.getElementById('sendRespondedBtn').disabled = false;
             document.getElementById('sendFollowUpBtn').disabled = false;
+            document.getElementById('sendStayBtn').disabled = false;
             const draftType = isToPayDraft ? 'delay' : (isToRespondView() ? 'respond' : 'follow-up');
             addAuditEntry('ai_draft', `AI ${draftType} draft for "${truncate(email.subject, 40)}"`);
 
@@ -3280,9 +3303,11 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
     async function sendDraft(destination) {
         const respondedBtn = document.getElementById('sendRespondedBtn');
         const followUpBtn = document.getElementById('sendFollowUpBtn');
+        const stayBtn = document.getElementById('sendStayBtn');
         respondedBtn.disabled = true;
         followUpBtn.disabled = true;
-        const activeBtn = destination === 'responded' ? respondedBtn : followUpBtn;
+        stayBtn.disabled = true;
+        const activeBtn = destination === 'responded' ? respondedBtn : (destination === 'stay' ? stayBtn : followUpBtn);
         const origText = activeBtn.innerHTML;
         activeBtn.textContent = 'Sending...';
 
@@ -3366,35 +3391,43 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
                 logUnsubscribe(currentDraftEmail.threadId, currentDraftEmail.fromEmail, 'reply');
             }
 
-            // Move label: remove current label, add destination label
-            const destLabelName = destination === 'responded' ? '5: responded' : '2: to follow-up';
-            const fromLabelObj = allLabelsRaw.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
-            const destLabelObj = allLabelsRaw.find(l => l.name === destLabelName);
-
-            if (fromLabelObj && destLabelObj && currentDraftEmail?.msgIds) {
-                for (let m = 0; m < currentDraftEmail.msgIds.length; m++) {
-                    if (m > 0) await new Promise(r => setTimeout(r, 300));
-                    await gapi.client.gmail.users.messages.modify({
-                        userId: 'me',
-                        id: currentDraftEmail.msgIds[m],
-                        resource: {
-                            addLabelIds: [destLabelObj.id],
-                            removeLabelIds: [fromLabelObj.id]
-                        }
-                    });
-                }
-            }
-
-            // Remove from current list and re-render
-            if (currentDraftIndex !== null && allEmails[currentDraftIndex]) {
-                allEmails.splice(currentDraftIndex, 1);
-            }
-
             const attCount = pendingAttachments.length;
-            closeDraftModal();
             const attNote = attCount > 0 ? ` with ${attCount} attachment${attCount > 1 ? 's' : ''}` : '';
-            showSuccess('Sent from ' + (fromEmail || 'primary account') + ' to ' + to + attNote + ' — moved to "' + destLabelName + '"');
-            addAuditEntry('email_sent', `Sent to ${to}: "${truncate(subject, 40)}"${attNote} from ${currentLabel}`);
+
+            if (destination === 'stay') {
+                // Send only — no label move, keep email in current view
+                closeDraftModal();
+                showSuccess('Sent from ' + (fromEmail || 'primary account') + ' to ' + to + attNote + ' — staying in "' + currentLabel + '"');
+                addAuditEntry('email_sent', `Delayed payment sent to ${to}: "${truncate(subject, 40)}"${attNote}`);
+            } else {
+                // Move label: remove current label, add destination label
+                const destLabelName = destination === 'responded' ? '5: responded' : '2: to follow-up';
+                const fromLabelObj = allLabelsRaw.find(l => l.name.toLowerCase() === currentLabel.toLowerCase());
+                const destLabelObj = allLabelsRaw.find(l => l.name === destLabelName);
+
+                if (fromLabelObj && destLabelObj && currentDraftEmail?.msgIds) {
+                    for (let m = 0; m < currentDraftEmail.msgIds.length; m++) {
+                        if (m > 0) await new Promise(r => setTimeout(r, 300));
+                        await gapi.client.gmail.users.messages.modify({
+                            userId: 'me',
+                            id: currentDraftEmail.msgIds[m],
+                            resource: {
+                                addLabelIds: [destLabelObj.id],
+                                removeLabelIds: [fromLabelObj.id]
+                            }
+                        });
+                    }
+                }
+
+                // Remove from current list and re-render
+                if (currentDraftIndex !== null && allEmails[currentDraftIndex]) {
+                    allEmails.splice(currentDraftIndex, 1);
+                }
+
+                closeDraftModal();
+                showSuccess('Sent from ' + (fromEmail || 'primary account') + ' to ' + to + attNote + ' — moved to "' + destLabelName + '"');
+                addAuditEntry('email_sent', `Sent to ${to}: "${truncate(subject, 40)}"${attNote} from ${currentLabel}`);
+            }
             triggerAutoBackup();
 
             if (isInboxView) {
@@ -3411,6 +3444,7 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
 
         respondedBtn.disabled = false;
         followUpBtn.disabled = false;
+        stayBtn.disabled = false;
         activeBtn.innerHTML = origText;
     }
 
