@@ -3140,10 +3140,25 @@ Sign off as ${senderName}.`;
         document.getElementById('attachmentSizeInfo').textContent = '';
         document.getElementById('attachmentInput').value = '';
         const isToPayDraft = currentLabel.toLowerCase().includes('to pay') || currentLabel.startsWith('3');
-        document.getElementById('draftModalTitle').textContent = (isToPayDraft ? 'Delay Payment: ' : 'Draft Response: ') + email.subject;
-        document.getElementById('draftingStatusText').textContent = isToPayDraft
-            ? 'Claude is drafting a delayed payment message...'
-            : 'Claude is drafting your response...';
+        const isToRespondDraft = currentLabel.toLowerCase().includes('to respond') || currentLabel.startsWith('1');
+        const isFollowUpDraft = currentLabel.toLowerCase().includes('follow') || currentLabel.startsWith('2');
+
+        let draftLabel, draftStatusMsg;
+        if (isToPayDraft) {
+            draftLabel = 'Delay Payment: ';
+            draftStatusMsg = 'Claude is drafting a delayed payment message...';
+        } else if (isToRespondDraft) {
+            draftLabel = 'Draft Response: ';
+            draftStatusMsg = 'Claude is drafting your response...';
+        } else if (isFollowUpDraft) {
+            draftLabel = 'Draft Follow Up: ';
+            draftStatusMsg = 'Claude is drafting your follow-up...';
+        } else {
+            draftLabel = 'Draft Follow Up: ';
+            draftStatusMsg = 'Claude is drafting your follow-up...';
+        }
+        document.getElementById('draftModalTitle').textContent = draftLabel + email.subject;
+        document.getElementById('draftingStatusText').textContent = draftStatusMsg;
 
         // Show/hide the correct send buttons
         if (isToPayDraft) {
