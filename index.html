@@ -1684,6 +1684,7 @@
     function markAsUnsubscribed(index) {
         const email = allEmails[index];
         if (!email) return;
+        collapseRow(index);
         logUnsubscribe(email.threadId, email.fromEmail || email.from, 'manual');
         // Update row button
         const btn = document.getElementById('unsub-' + index);
@@ -1700,6 +1701,7 @@
     async function unsubscribeEmail(index) {
         const email = allEmails[index];
         if (!email) return;
+        collapseRow(index);
 
         const btn = document.getElementById('unsub-' + index);
         if (btn) { btn.disabled = true; btn.textContent = '...'; }
@@ -2918,6 +2920,13 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         }).join('')}</div>`;
     }
 
+    function collapseRow(index) {
+        const row = document.getElementById('row-' + index);
+        if (row && row.classList.contains('expanded')) {
+            row.classList.remove('expanded');
+        }
+    }
+
     async function toggleRow(index) {
         const row = document.getElementById('row-' + index);
         const wasExpanded = row.classList.contains('expanded');
@@ -3129,6 +3138,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
     // ============================================================
     async function draftUnsubscribeReply(index) {
         const email = allEmails[index];
+        collapseRow(index);
         currentDraftEmail = email;
         currentDraftIndex = index;
         pendingAttachments = [];
@@ -3213,6 +3223,7 @@ Sign off as ${senderName}.`;
     // DRAFT FOLLOW UP (Claude AI via Cloudflare Worker)
     // ============================================================
     async function draftFollowUp(index) {
+        collapseRow(index);
         const email = allEmails[index];
         currentDraftEmail = email;
         currentDraftIndex = index;
