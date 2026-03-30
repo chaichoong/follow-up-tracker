@@ -435,6 +435,12 @@
             display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px;
             border-radius: 4px; background: #ede9fe; color: #6366f1; margin-left: 8px; vertical-align: middle;
         }
+        /* Mark Done override button on Delete view */
+        .unsub-btn.mark-done-btn {
+            background: #f8fafc; color: #6366f1; border: 1px solid #c7d2fe;
+        }
+        .unsub-btn.mark-done-btn:hover { background: #ede9fe; border-color: #a5b4fc; }
+
         /* Newsletter Filter Bar */
         .filter-bar {
             display: flex; gap: 8px; margin-bottom: 12px;
@@ -1588,6 +1594,22 @@
         return getUnsubscribeLog().some(e => e.threadId === threadId);
     }
 
+    function markAsUnsubscribed(index) {
+        const email = allEmails[index];
+        if (!email) return;
+        logUnsubscribe(email.threadId, email.fromEmail || email.from, 'manual');
+        // Update row button
+        const btn = document.getElementById('unsub-' + index);
+        if (btn) { btn.textContent = 'Done'; btn.className = 'unsub-btn already-unsub'; btn.disabled = true; }
+        // Update expanded body button if present
+        const bodyBtn = document.getElementById('unsub-body-' + index);
+        if (bodyBtn) { bodyBtn.textContent = 'Done'; bodyBtn.className = 'unsub-btn already-unsub'; bodyBtn.disabled = true; }
+        updateStats(allEmails);
+        showSuccess('Marked "' + email.from + '" as already unsubscribed.');
+        addAuditEntry('unsubscribe', `Manually marked ${email.fromEmail || email.from} as unsubscribed`);
+        triggerAutoBackup();
+    }
+
     async function unsubscribeEmail(index) {
         const email = allEmails[index];
         if (!email) return;
@@ -2622,7 +2644,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                 } else if (hasUnsub) {
                     unsubBtnHtml = `<button class="unsub-btn" id="unsub-${i}" onclick="event.stopPropagation(); unsubscribeEmail(${i})">Unsubscribe</button>`;
                 } else {
-                    unsubBtnHtml = '<button class="unsub-btn no-link" disabled title="No unsubscribe link found">No link</button>';
+                    unsubBtnHtml = `<button class="unsub-btn mark-done-btn" id="unsub-${i}" onclick="event.stopPropagation(); markAsUnsubscribed(${i})" title="Mark as already unsubscribed">Mark Done</button>`;
                 }
                 return `
                 <div class="email-row" id="row-${i}">
@@ -2652,6 +2674,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                         <div style="padding:10px 0; display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="unsub-btn" onclick="draftUnsubscribeReply(${i})" style="padding:8px 16px; font-size:13px;">Reply to Request Unsubscribe</button>
                             ${email.unsubscribeUrl ? `<button class="followup-btn" onclick="window.open('${escapeHtml(email.unsubscribeUrl)}', '_blank')" style="padding:8px 16px; font-size:13px;">Open Unsubscribe Link</button>` : ''}
+                            ${!alreadyUnsub ? `<button class="unsub-btn mark-done-btn" id="unsub-body-${i}" onclick="markAsUnsubscribed(${i})" style="padding:8px 16px; font-size:13px;">Mark as Already Unsubscribed</button>` : ''}
                         </div>
                         ${email.messages.length > 1 ? renderThread(email.messages) : renderSingleMessage(email.messages[0])}
                     </div>
