@@ -435,6 +435,18 @@
             display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px;
             border-radius: 4px; background: #ede9fe; color: #6366f1; margin-left: 8px; vertical-align: middle;
         }
+        /* Newsletter Filter Bar */
+        .filter-bar {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .filter-btn {
+            padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            cursor: pointer; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .filter-btn.active { background: #6366f1; color: #ffffff; border-color: #6366f1; }
+
         /* Attachment UI in Draft Modal */
         .attachment-add-row {
             display: flex; align-items: center; gap: 8px; margin-top: 4px;
@@ -539,6 +551,8 @@
             .search-info { font-size: 11px; }
             .global-label-tag { font-size: 9px; padding: 1px 5px; margin-left: 4px; }
             .email-row-summary.global-row .global-label-tag { display: block; margin-left: 0; margin-top: 2px; }
+            .filter-bar { gap: 6px; margin-bottom: 8px; }
+            .filter-btn { padding: 6px 12px; font-size: 12px; }
         }
 
         /* Small phones */
@@ -610,6 +624,12 @@
                 <button class="search-scope-btn local" id="searchScopeBtn" onclick="toggleSearchScope()">This Label</button>
             </div>
             <div class="search-info" id="searchInfo" style="display:none;"></div>
+        </div>
+
+        <div class="filter-bar" id="newsletterFilterBar" style="display:none;">
+            <button class="filter-btn active" id="filterAll" onclick="setNewsletterFilter('all')">All</button>
+            <button class="filter-btn" id="filterUnread" onclick="setNewsletterFilter('unread')">Unread</button>
+            <button class="filter-btn" id="filterRead" onclick="setNewsletterFilter('read')">Read</button>
         </div>
 
         <div class="email-list" id="emailList">
@@ -808,6 +828,7 @@
     let globalSearchMode = false;
     let globalSearchResults = null; // stores emails from global search
     let savedLabelEmails = null; // saves current label emails while global search is active
+    let newsletterFilter = 'all'; // 'all', 'unread', 'read'
 
     // Undo state
     let lastUndoAction = null;
@@ -1182,6 +1203,17 @@
 
         // Show search bar after loading
         document.getElementById('searchBar').style.display = 'block';
+
+        // Show/hide newsletter filter bar and reset filter
+        if (isNewsletterView()) {
+            document.getElementById('newsletterFilterBar').style.display = 'flex';
+            newsletterFilter = 'all';
+            document.getElementById('filterAll').className = 'filter-btn active';
+            document.getElementById('filterUnread').className = 'filter-btn';
+            document.getElementById('filterRead').className = 'filter-btn';
+        } else {
+            document.getElementById('newsletterFilterBar').style.display = 'none';
+        }
 
         btn.disabled = false;
         btn.textContent = 'Refresh';
@@ -1690,6 +1722,57 @@
         renderEmails(allEmails);
         updateStats(allEmails);
         showSuccess('All newsletters marked as read.');
+    }
+
+    function setNewsletterFilter(filter) {
+        newsletterFilter = filter;
+        // Update button states
+        document.getElementById('filterAll').className = 'filter-btn' + (filter === 'all' ? ' active' : '');
+        document.getElementById('filterUnread').className = 'filter-btn' + (filter === 'unread' ? ' active' : '');
+        document.getElementById('filterRead').className = 'filter-btn' + (filter === 'read' ? ' active' : '');
+        // Apply filter (combined with any active search)
+        applyNewsletterFilterAndSearch();
+        currentPage = 1;
+        renderEmailsWithPagination();
+    }
+
+    function applyNewsletterFilterAndSearch() {
+        let base = allEmails;
+        // Apply read/unread filter first
+        if (newsletterFilter === 'unread') {
+            base = allEmails.filter(e => !isNewsletterRead(e.threadId));
+        } else if (newsletterFilter === 'read') {
+            base = allEmails.filter(e => isNewsletterRead(e.threadId));
+        }
+        // Then apply search on top if active
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            filteredEmails = base.filter(email => {
+                const subject = (email.subject || '').toLowerCase();
+                const from = (email.from || '').toLowerCase();
+                const fromFull = (email.fromFull || '').toLowerCase();
+                const snippet = (email.snippet || '').toLowerCase();
+                if (subject.includes(q) || from.includes(q) || fromFull.includes(q) || snippet.includes(q)) return true;
+                if (email.messages && email.messages.length > 0) {
+                    for (const msg of email.messages) {
+                        if (msg.body) {
+                            let bodyText = msg.body;
+                            if (msg.isHtml) {
+                                const div = document.createElement('div');
+                                div.innerHTML = bodyText;
+                                bodyText = div.textContent || div.innerText || '';
+                            }
+                            if (bodyText.toLowerCase().includes(q)) return true;
+                        }
+                    }
+                }
+                return false;
+            });
+        } else if (newsletterFilter !== 'all') {
+            filteredEmails = base;
+        } else {
+            filteredEmails = null;
+        }
     }
 
     function isPaidView() {
@@ -3509,7 +3592,6 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
             const infoEl = document.getElementById('searchInfo');
 
             if (!query) {
-                filteredEmails = null;
                 clearBtn.style.display = 'none';
                 infoEl.style.display = 'none';
                 // Restore original emails if coming back from global search
@@ -3517,6 +3599,12 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
                     allEmails = savedLabelEmails;
                     savedLabelEmails = null;
                     globalSearchResults = null;
+                }
+                // Reapply newsletter filter if active, otherwise clear
+                if (isNewsletterView() && newsletterFilter !== 'all') {
+                    applyNewsletterFilterAndSearch();
+                } else {
+                    filteredEmails = null;
                 }
                 currentPage = 1;
                 renderEmailsWithPagination();
@@ -3532,10 +3620,14 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
                 return;
             }
 
-            // Local search within current label
-            filteredEmails = getFilteredEmails();
+            // Local search within current label (respects newsletter filter)
+            if (isNewsletterView() && newsletterFilter !== 'all') {
+                applyNewsletterFilterAndSearch();
+            } else {
+                filteredEmails = getFilteredEmails();
+            }
             infoEl.style.display = 'block';
-            infoEl.textContent = `Showing ${filteredEmails.length} of ${allEmails.length} emails`;
+            infoEl.textContent = `Showing ${filteredEmails ? filteredEmails.length : allEmails.length} of ${allEmails.length} emails`;
             currentPage = 1;
             renderEmailsWithPagination();
         }, 300);
