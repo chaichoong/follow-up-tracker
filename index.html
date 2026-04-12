@@ -609,9 +609,17 @@
             .email-subject { font-size: 12px; }
             .email-from { font-size: 10px; }
         }
+        .skip-link {
+            position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+            z-index: 1000; background: #6366f1; color: white; padding: 8px 16px; border-radius: 0 0 8px 0;
+            font-size: 14px; font-weight: 600; text-decoration: none;
+        }
+        .skip-link:focus { position: fixed; left: 0; top: 0; width: auto; height: auto; overflow: visible; }
     </style>
 </head>
 <body>
+
+<a href="#emailListBody" class="skip-link">Skip to email list</a>
 
 <!-- Auth Screen -->
 <div id="authScreen" class="auth-screen">
@@ -634,14 +642,15 @@
                 <option value="">Loading labels...</option>
             </select>
             <span class="badge" id="emailCount">0</span>
-            <button class="refresh-btn" id="refreshBtn" onclick="loadEmails()">Refresh</button>
+            <button class="refresh-btn" id="refreshBtn" onclick="loadEmails()" aria-label="Refresh emails">Refresh</button>
             <span class="cloud-sync-indicator" id="cloudSyncIndicator" title="Cloud sync status"></span>
             <span class="backup-indicator" id="backupIndicator"></span>
-            <button class="settings-btn" onclick="openSettings()" title="Settings">&#9881;</button>
-            <button class="signout-btn" onclick="handleSignout()">Sign out</button>
+            <button class="settings-btn" onclick="openSettings()" title="Settings" aria-label="Settings">&#9881;</button>
+            <button class="signout-btn" onclick="handleSignout()" aria-label="Sign out">Sign out</button>
         </div>
     </div>
 
+    <main>
     <div class="container">
         <div id="errorContainer"></div>
 
@@ -716,13 +725,14 @@
         <div class="last-updated" id="lastUpdated"></div>
     </div>
 </div>
+    </main>
 
 <!-- Draft Modal -->
-<div class="modal-overlay" id="draftModal">
+<div class="modal-overlay" id="draftModal" role="dialog" aria-modal="true" aria-labelledby="draftModalTitle">
     <div class="modal">
         <div class="modal-header">
             <h3 id="draftModalTitle">Draft Follow Up</h3>
-            <button class="modal-close" onclick="closeDraftModal()">&times;</button>
+            <button class="modal-close" onclick="closeDraftModal()" aria-label="Close draft modal">&times;</button>
         </div>
         <div class="modal-body" id="draftModalBody">
             <div class="drafting-status" id="draftingStatus">
@@ -780,11 +790,11 @@
 </div>
 
 <!-- Settings Modal -->
-<div class="modal-overlay" id="settingsModal">
+<div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-label="Settings">
     <div class="modal" style="max-width:480px;">
         <div class="modal-header">
             <h3>Settings</h3>
-            <button class="modal-close" onclick="closeSettings()">&times;</button>
+            <button class="modal-close" onclick="closeSettings()" aria-label="Close settings">&times;</button>
         </div>
         <div class="modal-body">
             <div class="modal-field">
@@ -837,11 +847,11 @@
 </div>
 
 <!-- KB Build Prompt Modal -->
-<div class="modal-overlay" id="kbPromptModal">
+<div class="modal-overlay" id="kbPromptModal" role="dialog" aria-modal="true" aria-label="Build Knowledge Base">
     <div class="modal" style="max-width:440px;">
         <div class="modal-header">
             <h3>Build Knowledge Base?</h3>
-            <button class="modal-close" onclick="dismissKbPrompt()">&times;</button>
+            <button class="modal-close" onclick="dismissKbPrompt()" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
             <p style="font-size:14px; color:#475569; line-height:1.6;">
@@ -1214,7 +1224,10 @@
     // ============================================================
     // SETTINGS
     // ============================================================
+    let lastFocusedElement = null;
+
     function openSettings() {
+        lastFocusedElement = document.activeElement;
         document.getElementById('senderName').value = localStorage.getItem('sender_name') || '';
         document.getElementById('airtablePat').value = localStorage.getItem('airtable_pat') || '';
         document.getElementById('airtableBaseId').value = localStorage.getItem('airtable_base_id') || '';
@@ -1223,10 +1236,16 @@
         updateAirtableStatus();
         updateKbStatusDisplay();
         renderAuditLog();
-        document.getElementById('settingsModal').classList.add('active');
+        const modal = document.getElementById('settingsModal');
+        modal.classList.add('active');
+        const firstInput = modal.querySelector('input, button, select, textarea');
+        if (firstInput) firstInput.focus();
     }
 
-    function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
+    function closeSettings() {
+        document.getElementById('settingsModal').classList.remove('active');
+        if (lastFocusedElement) { lastFocusedElement.focus(); lastFocusedElement = null; }
+    }
 
     // ============================================================
     // BACKUP & RESTORE
@@ -1429,6 +1448,7 @@
     function dismissKbPrompt() {
         document.getElementById('kbPromptModal').classList.remove('active');
         localStorage.setItem('kb_prompt_dismissed', 'true');
+        if (lastFocusedElement) { lastFocusedElement.focus(); lastFocusedElement = null; }
     }
 
     // ============================================================
@@ -1743,6 +1763,7 @@
             const kbData = localStorage.getItem('label_knowledge_base');
             const kbPromptDismissed = localStorage.getItem('kb_prompt_dismissed');
             if (!kbData && !kbPromptDismissed) {
+                lastFocusedElement = document.activeElement;
                 document.getElementById('kbPromptModal').classList.add('active');
             } else if (kbData) {
                 // Auto-request AI suggestions
@@ -3354,7 +3375,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
             if (globalSearchResults) {
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary global-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary global-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3363,7 +3384,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                         <div><span class="global-label-tag">${escapeHtml(email._globalLabel || 'Unlabelled')}</span></div>
                         <div class="email-date">${formatDate(email.lastDate)}</div>
                         <div class="days-old ${getDaysClass(email.daysOld)}" id="days-${i}">${email.daysOld}d</div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3381,7 +3402,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
             if (toPay) {
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary topay-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary topay-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3398,7 +3419,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3414,7 +3435,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
             } else if (isArchiveView()) {
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary archive-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary archive-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3428,7 +3449,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3444,7 +3465,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                 const isRead = isNewsletterRead(email.threadId);
                 return `
                 <div class="email-row ${isRead ? 'newsletter-read' : ''}" id="row-${i}">
-                    <div class="email-row-summary newsletter-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary newsletter-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3463,7 +3484,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3488,7 +3509,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                 }
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary delete-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary delete-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3502,7 +3523,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3533,7 +3554,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                 }
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary compliance-row" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary compliance-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3547,7 +3568,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3563,7 +3584,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
             } else {
                 return `
                 <div class="email-row" id="row-${i}">
-                    <div class="email-row-summary" onclick="toggleRow(${i}); return false;">
+                    <div class="email-row-summary" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                         <div class="row-number">${displayNum}</div>
                         <div class="email-subject-col">
                             <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3578,7 +3599,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                                 ${labelOptions}
                             </select>
                         </div>
-                        <div class="expand-icon">&#9662;</div>
+                        <div class="expand-icon" aria-hidden="true">&#9662;</div>
                     </div>
                     <div class="email-body">
                         <div class="email-meta">
@@ -3649,7 +3670,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
 
             return `
             <div class="email-row" id="row-${i}">
-                <div class="email-row-summary inbox-row" onclick="toggleRow(${i}); return false;">
+                <div class="email-row-summary inbox-row" onclick="toggleRow(${i}); return false;" aria-expanded="false" role="button" tabindex="0">
                     <div class="row-number">${displayNum}</div>
                     <div class="email-subject-col">
                         <div class="email-subject">${hasRealAttachments(email) ? '<span class="paperclip" title="Has attachments">&#128206;</span> ' : ''}${escapeHtml(email.subject)}</div>
@@ -3668,7 +3689,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
                     <div onclick="event.stopPropagation(); " style="text-align:center;">
                         <button class="apply-btn" id="applyBtn-${i}" onclick="applyInboxLabel(${i})">Apply</button>
                     </div>
-                    <div class="expand-icon">&#9662;</div>
+                    <div class="expand-icon" aria-hidden="true">&#9662;</div>
                 </div>
                 <div class="email-body">
                     <div class="email-meta">
@@ -3733,6 +3754,8 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         const row = document.getElementById('row-' + index);
         if (row && row.classList.contains('expanded')) {
             row.classList.remove('expanded');
+            const summary = row.querySelector('.email-row-summary');
+            if (summary) summary.setAttribute('aria-expanded', 'false');
         }
     }
 
@@ -3741,6 +3764,8 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         if (!row) return;
         const wasExpanded = row.classList.contains('expanded');
         row.classList.toggle('expanded');
+        const summary = row.querySelector('.email-row-summary');
+        if (summary) summary.setAttribute('aria-expanded', String(!wasExpanded));
 
         // On first expand, populate the email body content (deferred to prevent malformed HTML breaking DOM)
         if (!wasExpanded) {
@@ -4010,6 +4035,7 @@ Example: [{"index": 0, "label": "3. to pay", "confidence": "high", "reason": "In
         currentDraftIndex = index;
         pendingAttachments = [];
 
+        lastFocusedElement = document.activeElement;
         document.getElementById('draftModal').classList.add('active');
         document.getElementById('draftingStatus').style.display = 'block';
         document.getElementById('draftForm').style.display = 'none';
@@ -4096,6 +4122,7 @@ Sign off as ${senderName}.`;
         currentDraftIndex = index;
         pendingAttachments = [];
 
+        lastFocusedElement = document.activeElement;
         document.getElementById('draftModal').classList.add('active');
         document.getElementById('draftingStatus').style.display = 'block';
         document.getElementById('draftForm').style.display = 'none';
@@ -4264,6 +4291,7 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         document.getElementById('attachmentListPreview').innerHTML = '';
         document.getElementById('attachmentSizeInfo').textContent = '';
         document.getElementById('attachmentInput').value = '';
+        if (lastFocusedElement) { lastFocusedElement.focus(); lastFocusedElement = null; }
     }
 
     // ============================================================
