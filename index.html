@@ -948,6 +948,16 @@
     function gapiLoaded() {
         gapi.load('client', async () => {
             await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'] });
+
+            // Intercept all Gmail API calls to ensure token is valid first.
+            // This prevents expired-token failures without requiring every
+            // calling function to remember to check the token individually.
+            const originalRequest = gapi.client.request.bind(gapi.client);
+            gapi.client.request = async function(args) {
+                try { await ensureValidToken(); } catch (e) { /* continue with existing token */ }
+                return originalRequest(args);
+            };
+
             const stored = sessionStorage.getItem('gmail_token');
             if (stored) {
                 accessToken = stored;
@@ -1461,7 +1471,7 @@
         document.getElementById('emailListBody').innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading emails...</div></div>';
         document.getElementById('paginationBar').style.display = 'none';
         clearError();
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         // Reset search and pagination
         currentPage = 1;
@@ -1924,7 +1934,7 @@
     }
 
     async function unsubscribeEmail(index) {
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         const email = allEmails[index];
         if (!email) return;
@@ -2405,7 +2415,7 @@ Respond with ONLY the JSON object, no markdown.`;
         // Only run when viewing label 8
         if (!isTaskCreatedView()) return;
 
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         try {
             // Query Airtable for completed inbound tasks with Gmail links
@@ -2724,7 +2734,7 @@ Respond with ONLY valid JSON, no markdown.`;
         if (labelChangeInProgress) { showError('Please wait, a label change is already in progress.'); return; }
         labelChangeInProgress = true;
 
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         const email = allEmails[emailIndex];
         if (!email) { labelChangeInProgress = false; return; }
@@ -2798,7 +2808,7 @@ Respond with ONLY valid JSON, no markdown.`;
     // APPLY LABEL FROM INBOX
     // ============================================================
     async function applyInboxLabel(emailIndex) {
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         const email = allEmails[emailIndex];
         if (!email) return;
@@ -2879,7 +2889,7 @@ Respond with ONLY valid JSON, no markdown.`;
     }
 
     async function applyAllInboxLabels() {
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         // Collect all rows that have a label selected
         const toApply = [];
@@ -4429,7 +4439,7 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
     // SEND EMAIL
     // ============================================================
     async function sendDraft(destination) {
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         const respondedBtn = document.getElementById('sendRespondedBtn');
         const followUpBtn = document.getElementById('sendFollowUpBtn');
@@ -4884,7 +4894,7 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         lastUndoAction = null;
         dismissUndoToast();
 
-        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
 
         try {
             for (let i = 0; i < action.messageIds.length; i++) {
