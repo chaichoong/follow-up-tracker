@@ -1924,6 +1924,8 @@
     }
 
     async function unsubscribeEmail(index) {
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         const email = allEmails[index];
         if (!email) return;
         collapseRow(index);
@@ -2403,6 +2405,8 @@ Respond with ONLY the JSON object, no markdown.`;
         // Only run when viewing label 8
         if (!isTaskCreatedView()) return;
 
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         try {
             // Query Airtable for completed inbound tasks with Gmail links
             const formula = encodeURIComponent(
@@ -2720,6 +2724,8 @@ Respond with ONLY valid JSON, no markdown.`;
         if (labelChangeInProgress) { showError('Please wait, a label change is already in progress.'); return; }
         labelChangeInProgress = true;
 
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         const email = allEmails[emailIndex];
         if (!email) { labelChangeInProgress = false; return; }
 
@@ -2792,6 +2798,8 @@ Respond with ONLY valid JSON, no markdown.`;
     // APPLY LABEL FROM INBOX
     // ============================================================
     async function applyInboxLabel(emailIndex) {
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         const email = allEmails[emailIndex];
         if (!email) return;
 
@@ -2871,6 +2879,8 @@ Respond with ONLY valid JSON, no markdown.`;
     }
 
     async function applyAllInboxLabels() {
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         // Collect all rows that have a label selected
         const toApply = [];
         for (let i = 0; i < allEmails.length; i++) {
@@ -4419,6 +4429,8 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
     // SEND EMAIL
     // ============================================================
     async function sendDraft(destination) {
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
+
         const respondedBtn = document.getElementById('sendRespondedBtn');
         const followUpBtn = document.getElementById('sendFollowUpBtn');
         const stayBtn = document.getElementById('sendStayBtn');
@@ -4871,6 +4883,8 @@ Do not include a subject line - just the body text. Sign off as ${senderName}.`;
         const action = lastUndoAction;
         lastUndoAction = null;
         dismissUndoToast();
+
+        try { await ensureValidToken(); } catch (e) { console.warn('Token refresh failed, continuing with existing token'); }
 
         try {
             for (let i = 0; i < action.messageIds.length; i++) {
